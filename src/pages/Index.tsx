@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   // Calculate summary metrics from the data
-  const totalInventoryValue = mockInventoryData.reduce((sum, item) => sum + (item.inStock * 125), 0);
-  const totalStockAvailable = mockInventoryData.reduce((sum, item) => sum + item.inStock, 0);
-  const ordersMatch = mockInventoryData.filter(item => item.onOrder > 0).length;
+  const totalInventoryValue = mockInventoryData.reduce((sum, item) => sum + (item.availableStock * 125), 0);
+  const totalStockAvailable = mockInventoryData.reduce((sum, item) => sum + item.availableStock, 0);
+  const totalConsumed = mockInventoryData.reduce((sum, item) => sum + item.consumed, 0);
+  const activeOrders = mockInventoryData.filter(item => item.totalOnOrder > 0).length;
   const criticalItems = mockInventoryData.filter(item => item.projectedStock < 0).length;
   const lowStockItems = mockInventoryData.filter(item => item.projectedStock >= 0 && item.projectedStock <= item.safetyStock).length;
 
@@ -55,8 +56,8 @@ const Index = () => {
             iconBgColor="bg-chart-2"
           />
           <MetricCard
-            title="ORDERS MATCH"
-            value={ordersMatch}
+            title="ACTIVE ORDERS"
+            value={activeOrders}
             icon={ShoppingCart}
             iconBgColor="bg-chart-3"
           />
@@ -78,9 +79,9 @@ const Index = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-foreground">60-Day Inventory Projection</h2>
+              <h2 className="text-xl font-semibold text-foreground">Inventory Projection with Lead Times</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Monitor stock levels considering 2-month lead time | Safety stock: 25 units
+                P1: 14-day local orders | P2a/P2b: 60-day China shipments | Projected from signed quotations + 1-month buffer | Safety stock: 25 units
               </p>
             </div>
           </div>
