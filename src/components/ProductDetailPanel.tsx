@@ -7,12 +7,13 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InventoryItem } from "@/lib/supabase";
-import { Package, TrendingUp, AlertCircle, Calculator } from "lucide-react";
+import { Package, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { useProductVendors } from "@/hooks/useInventory";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 interface ProductDetailPanelProps {
   item: InventoryItem | null;
@@ -21,7 +22,7 @@ interface ProductDetailPanelProps {
 }
 
 export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanelProps) => {
-  const [sortBy, setSortBy] = useState<'price' | 'leadTime'>('price');
+  const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: productVendors, isLoading: vendorsLoading } = useProductVendors(item?.id);
 
   if (!item) return null;
@@ -53,13 +54,9 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
   const recommendedOrder = calculateRecommendedOrder(item.projected_stock, item.consumed_30d);
   const availableStock = item.in_stock - item.allocated;
   const totalPipeline = item.on_order_local_14d + item.on_order_shipment_a_60d + item.on_order_shipment_b_60d;
+  const dailyConsumption = item.consumed_30d / 30;
 
-  const sortedVendors = productVendors ? [...productVendors].sort((a, b) => {
-    if (sortBy === 'price') {
-      return a.unit_price - b.unit_price;
-    }
-    return a.lead_time_days - b.lead_time_days;
-  }) : [];
+  const primaryVendor = productVendors?.find(pv => pv.is_primary) || productVendors?.[0];
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -68,192 +65,209 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
           <SheetTitle className="text-2xl">{item.product_name}</SheetTitle>
           <SheetDescription className="flex items-center gap-2 mt-2">
             <span className="text-sm font-mono bg-muted px-2 py-1 rounded">SKU: {item.sku}</span>
-            <Badge className={stockStatus.color}>{stockStatus.label}</Badge>
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Package className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">Supply & Pipeline</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">In Stock</p>
-                <p className="text-2xl font-bold">{item.in_stock}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Available (Unallocated)</p>
-                <p className="text-2xl font-bold text-primary">{availableStock}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Inbound (Local 14d)</p>
-                <p className="text-xl font-semibold">{item.on_order_local_14d}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Inbound (Shipment A 60d)</p>
-                <p className="text-xl font-semibold">{item.on_order_shipment_a_60d}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Inbound (Shipment B 60d)</p>
-                <p className="text-xl font-semibold">{item.on_order_shipment_b_60d}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Pipeline</p>
-                <p className="text-xl font-semibold text-chart-2">{totalPipeline}</p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="h-5 w-5 text-chart-3" />
-              <h3 className="text-lg font-semibold">Demand & Forecasting</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Allocated (Open Jobs)</p>
-                <p className="text-2xl font-bold">{item.allocated}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Signed Quotes (Forecast)</p>
-                <p className="text-2xl font-bold">{item.signed_quotations}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Consumed (30d Rate)</p>
-                <p className="text-xl font-semibold">{item.consumed_30d}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Daily Consumption</p>
-                <p className="text-xl font-semibold">{(item.consumed_30d / 30).toFixed(1)}</p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Calculator className="h-5 w-5 text-chart-4" />
-              <h3 className="text-lg font-semibold">Stock Analysis</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Stock Days Left</p>
-                <p className="text-2xl font-bold">
+          <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-6 border-2 border-primary/20">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">Stock Analysis</h3>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="col-span-1">
+                <p className="text-xs text-muted-foreground mb-1">Projected Days of Stock</p>
+                <p className="text-5xl font-bold text-primary">
                   {stockDaysLeft === Infinity ? '∞' : `${stockDaysLeft}d`}
                 </p>
+                <Badge className={`${stockStatus.color} mt-2`}>{stockStatus.label}</Badge>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Projected Stock</p>
-                <p className="text-2xl font-bold">{item.projected_stock}</p>
+              <div className="col-span-1">
+                <p className="text-xs text-muted-foreground mb-1">Projected Balance</p>
+                <p className="text-4xl font-bold text-foreground">{item.projected_stock}</p>
+                <p className="text-xs text-muted-foreground mt-2">units</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Safety Stock Threshold</p>
-                <p className="text-xl font-semibold">{item.safety_stock}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-sm text-muted-foreground mb-1">Recommended Order Quantity</p>
-                <div className="flex items-center gap-2">
-                  {recommendedOrder > 0 ? (
-                    <>
-                      <AlertCircle className="h-5 w-5 text-warning" />
-                      <p className="text-3xl font-bold text-primary">{recommendedOrder}</p>
-                      <span className="text-sm text-muted-foreground">units needed</span>
-                    </>
-                  ) : (
-                    <p className="text-xl font-semibold text-success">No order needed</p>
-                  )}
-                </div>
+              <div className="col-span-1">
+                <p className="text-xs text-muted-foreground mb-1">Safety Stock Threshold</p>
+                <p className="text-4xl font-bold text-foreground">{item.safety_stock}</p>
+                <p className="text-xs text-muted-foreground mt-2">units</p>
               </div>
             </div>
           </div>
 
           <Separator />
 
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Vendor Information</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant={sortBy === 'price' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortBy('price')}
-                >
-                  Sort by Price
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">Recommended Action</h3>
+            {recommendedOrder > 0 ? (
+              <div className="space-y-3">
+                <Button size="lg" className="w-full text-lg py-6 font-semibold">
+                  Create Order: {recommendedOrder} units
                 </Button>
-                <Button
-                  variant={sortBy === 'leadTime' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortBy('leadTime')}
+                <button
+                  onClick={() => setIsCalculationOpen(!isCalculationOpen)}
+                  className="text-xs text-primary hover:underline w-full text-center"
                 >
-                  Sort by Lead Time
-                </Button>
+                  How is this calculated?
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-lg font-semibold text-success">No order needed</p>
+                <p className="text-sm text-muted-foreground mt-1">Stock levels are sufficient</p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">Vendor Information</h3>
+            {recommendedOrder > 0 && (
+              <p className="text-xs text-muted-foreground mb-4 italic">
+                The "Create Order" button will use this vendor
+              </p>
+            )}
 
             {vendorsLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : sortedVendors && sortedVendors.length > 0 ? (
-              <div className="space-y-3">
-                {sortedVendors.map((pv) => (
-                  <div
-                    key={pv.id}
-                    className="border rounded-lg p-3 bg-card hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold">{pv.vendor?.name}</p>
-                          {pv.is_primary && (
-                            <Badge variant="secondary" className="text-xs">Primary</Badge>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm mt-2">
-                          <div>
-                            <span className="text-muted-foreground">Price: </span>
-                            <span className="font-medium">${pv.unit_price.toFixed(2)}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Lead Time: </span>
-                            <span className="font-medium">{pv.lead_time_days} days</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Min Order: </span>
-                            <span className="font-medium">{pv.minimum_order_qty} units</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Country: </span>
-                            <span className="font-medium">{pv.vendor?.country}</span>
-                          </div>
-                        </div>
-                        {pv.vendor_sku && (
-                          <p className="text-xs text-muted-foreground mt-2 font-mono">
-                            Vendor SKU: {pv.vendor_sku}
-                          </p>
-                        )}
-                        {pv.vendor?.contact_email && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {pv.vendor.contact_email}
-                          </p>
-                        )}
-                      </div>
+              <Skeleton className="h-32 w-full" />
+            ) : primaryVendor ? (
+              <div className="border-2 border-primary/30 rounded-lg p-4 bg-card">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-bold">{primaryVendor.vendor?.name}</p>
+                      {primaryVendor.is_primary && (
+                        <Badge variant="secondary" className="text-xs">Primary</Badge>
+                      )}
                     </div>
+                    {primaryVendor.vendor?.contact_email && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {primaryVendor.vendor.contact_email}
+                      </p>
+                    )}
                   </div>
-                ))}
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="bg-muted/50 rounded p-2">
+                    <span className="text-xs text-muted-foreground">Unit Price</span>
+                    <p className="text-lg font-bold">${primaryVendor.unit_price.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded p-2">
+                    <span className="text-xs text-muted-foreground">Lead Time</span>
+                    <p className="text-lg font-bold">{primaryVendor.lead_time_days} days</p>
+                  </div>
+                  <div className="bg-muted/50 rounded p-2">
+                    <span className="text-xs text-muted-foreground">Min Order</span>
+                    <p className="text-lg font-bold">{primaryVendor.minimum_order_qty} units</p>
+                  </div>
+                  <div className="bg-muted/50 rounded p-2">
+                    <span className="text-xs text-muted-foreground">Country</span>
+                    <p className="text-lg font-bold">{primaryVendor.vendor?.country}</p>
+                  </div>
+                </div>
+                {primaryVendor.vendor_sku && (
+                  <p className="text-xs text-muted-foreground mt-3 font-mono bg-muted/30 px-2 py-1 rounded">
+                    Vendor SKU: {primaryVendor.vendor_sku}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No vendor information available
               </p>
             )}
+
+            {productVendors && productVendors.length > 1 && (
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-2">
+                  {productVendors.length - 1} alternative vendor{productVendors.length > 2 ? 's' : ''} available
+                </p>
+              </div>
+            )}
           </div>
+
+          <Separator />
+
+          <Collapsible open={isCalculationOpen} onOpenChange={setIsCalculationOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between" size="lg">
+                <span className="font-semibold">Show Calculation Details</span>
+                {isCalculationOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4 space-y-4">
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="h-5 w-5 text-primary" />
+                  <h3 className="text-base font-semibold">Supply & Pipeline</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total In Stock</p>
+                    <p className="text-2xl font-bold">{item.in_stock}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">On-Hand (Unclaimed)</p>
+                    <p className="text-2xl font-bold text-primary">{availableStock}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inbound (Local 14d)</p>
+                    <p className="text-xl font-semibold">{item.on_order_local_14d}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inbound (Shipment A 60d)</p>
+                    <p className="text-xl font-semibold">{item.on_order_shipment_a_60d}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inbound (Shipment B 60d)</p>
+                    <p className="text-xl font-semibold">{item.on_order_shipment_b_60d}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Pipeline</p>
+                    <p className="text-xl font-semibold text-chart-2">{totalPipeline}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="h-5 w-5 text-chart-3" />
+                  <h3 className="text-base font-semibold">Demand & Forecasting</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Claimed (Open Jobs)</p>
+                    <p className="text-2xl font-bold">{item.allocated}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Forecasted Demand (Quotes)</p>
+                    <p className="text-2xl font-bold">{item.signed_quotations}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg. 30-Day Consumption</p>
+                    <p className="text-xl font-semibold">{item.consumed_30d}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Daily Consumption</p>
+                    <p className="text-xl font-semibold">{dailyConsumption.toFixed(1)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                <h4 className="text-sm font-semibold mb-2">Calculation Formula</h4>
+                <div className="text-xs text-muted-foreground space-y-1 font-mono">
+                  <p>Projected Balance = {item.projected_stock}</p>
+                  <p>Daily Consumption = {dailyConsumption.toFixed(1)} units/day</p>
+                  <p>Days of Stock = {stockDaysLeft === Infinity ? '∞' : stockDaysLeft} days</p>
+                  <p className="mt-2 pt-2 border-t">Target Stock = Avg. 30-Day + Safety Stock</p>
+                  <p>Recommended Order = Target - Projected Balance</p>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </SheetContent>
     </Sheet>

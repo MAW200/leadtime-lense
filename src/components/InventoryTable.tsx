@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { InventoryItem } from "@/lib/supabase";
 import { MousePointer } from "lucide-react";
+import { InfoIconTooltip } from "./InfoIconTooltip";
 
 interface InventoryTableProps {
   data: InventoryItem[];
@@ -63,11 +64,36 @@ export const InventoryTable = ({ data, filterStatus, onRowClick }: InventoryTabl
                 <MousePointer className="h-3 w-3 text-muted-foreground" />
               </div>
             </TableHead>
-            <TableHead className="text-center font-semibold">Status</TableHead>
-            <TableHead className="text-right font-semibold">Stock Days Left</TableHead>
-            <TableHead className="text-right font-semibold">Projected Stock</TableHead>
-            <TableHead className="text-right font-semibold">Available (Unallocated)</TableHead>
-            <TableHead className="text-right font-semibold">In Stock</TableHead>
+            <TableHead className="text-center font-semibold">
+              <div className="flex items-center justify-center gap-2">
+                Status
+                <InfoIconTooltip content="Healthy: >30 days. Re-order: 15-30 days. Critical: <15 days." />
+              </div>
+            </TableHead>
+            <TableHead className="text-right font-semibold">
+              <div className="flex items-center justify-end gap-2">
+                Projected Days of Stock
+                <InfoIconTooltip content="How many days your stock will last. (Projected Balance / Daily Use)" />
+              </div>
+            </TableHead>
+            <TableHead className="text-right font-semibold">
+              <div className="flex items-center justify-end gap-2">
+                Projected Balance
+                <InfoIconTooltip content="Your estimated stock balance after all future supply and demand." />
+              </div>
+            </TableHead>
+            <TableHead className="text-right font-semibold">
+              <div className="flex items-center justify-end gap-2">
+                On-Hand (Unclaimed)
+                <InfoIconTooltip content="Total units in the warehouse minus units already claimed for open jobs." />
+              </div>
+            </TableHead>
+            <TableHead className="text-right font-semibold">
+              <div className="flex items-center justify-end gap-2">
+                Total In Stock
+                <InfoIconTooltip content="The total physical unit count in the warehouse." />
+              </div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
