@@ -4,6 +4,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Hydraulic Pump Model A",
     inStock: 120,
+    allocated: 12,
     consumed: 12,
     availableStock: 108,
     onOrderP1: 30,
@@ -17,6 +18,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Control Valve Series B",
     inStock: 200,
+    allocated: 30,
     consumed: 30,
     availableStock: 170,
     onOrderP1: 50,
@@ -30,6 +32,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Pressure Sensor Type C",
     inStock: 150,
+    allocated: 45,
     consumed: 45,
     availableStock: 105,
     onOrderP1: 20,
@@ -43,6 +46,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Electric Motor 5HP",
     inStock: 80,
+    allocated: 18,
     consumed: 18,
     availableStock: 62,
     onOrderP1: 15,
@@ -56,6 +60,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Bearing Assembly XL",
     inStock: 300,
+    allocated: 25,
     consumed: 25,
     availableStock: 275,
     onOrderP1: 80,
@@ -69,6 +74,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Filter Cartridge Pro",
     inStock: 140,
+    allocated: 40,
     consumed: 40,
     availableStock: 100,
     onOrderP1: 30,
@@ -82,6 +88,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Gasket Set Standard",
     inStock: 400,
+    allocated: 60,
     consumed: 60,
     availableStock: 340,
     onOrderP1: 70,
@@ -95,6 +102,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Cylinder Rod 12inch",
     inStock: 95,
+    allocated: 22,
     consumed: 22,
     availableStock: 73,
     onOrderP1: 25,
@@ -108,6 +116,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Coupling Universal Joint",
     inStock: 180,
+    allocated: 35,
     consumed: 35,
     availableStock: 145,
     onOrderP1: 40,
@@ -121,6 +130,7 @@ export const mockInventoryData: InventoryItem[] = [
   {
     productName: "Seal Kit Heavy Duty",
     inStock: 130,
+    allocated: 28,
     consumed: 28,
     availableStock: 102,
     onOrderP1: 35,

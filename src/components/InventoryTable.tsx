@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 export interface InventoryItem {
   productName: string;
   inStock: number;
+  allocated: number;
   consumed: number;
   availableStock: number;
   onOrderP1: number;
@@ -64,24 +65,35 @@ export const InventoryTable = ({ data, filterStatus }: InventoryTableProps) => {
       })
     : data;
 
+  const calculateRecommendedOrder = (projectedStock: number, consumed30d: number) => {
+    const targetStock = consumed30d + 25; // 1 month buffer + 25 unit safety stock
+    const recommendedQty = targetStock - projectedStock;
+    return recommendedQty > 0 ? recommendedQty : 0;
+  };
+
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead className="font-semibold">Product Name</TableHead>
+            <TableHead className="text-center font-semibold">Status</TableHead>
+            <TableHead className="text-right font-semibold">Stock Days Left</TableHead>
+            <TableHead className="text-right font-semibold">Projected Stock</TableHead>
             <TableHead className="text-right font-semibold">In Stock</TableHead>
-            <TableHead className="text-right font-semibold">Consumed (30d)</TableHead>
-            <TableHead className="text-right font-semibold">Available</TableHead>
+            <TableHead className="text-right font-semibold">Allocated (Open Jobs)</TableHead>
+            <TableHead className="text-right font-semibold">Available (Unallocated)</TableHead>
             <TableHead colSpan={3} className="text-center font-semibold border-l border-r bg-muted/70">
               Inbound Pipeline
             </TableHead>
             <TableHead className="text-right font-semibold">Signed Quotes</TableHead>
-            <TableHead className="text-right font-semibold">Projected Stock</TableHead>
-            <TableHead className="text-right font-semibold">Stock Days Left</TableHead>
-            <TableHead className="text-center font-semibold">Status</TableHead>
+            <TableHead className="text-right font-semibold">Consumed (30d)</TableHead>
+            <TableHead className="text-right font-semibold text-primary">Recommended Order Qty</TableHead>
           </TableRow>
           <TableRow className="bg-muted/30">
+            <TableHead className="h-0 p-0" />
+            <TableHead className="h-0 p-0" />
+            <TableHead className="h-0 p-0" />
             <TableHead className="h-0 p-0" />
             <TableHead className="h-0 p-0" />
             <TableHead className="h-0 p-0" />
@@ -92,31 +104,37 @@ export const InventoryTable = ({ data, filterStatus }: InventoryTableProps) => {
             <TableHead className="h-0 p-0" />
             <TableHead className="h-0 p-0" />
             <TableHead className="h-0 p-0" />
-            <TableHead className="h-0 p-0" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredData.map((item, index) => {
             const stockDaysLeft = calculateStockDaysLeft(item.projectedStock, item.consumed);
             const stockStatus = getStockStatus(stockDaysLeft);
+            const recommendedOrder = calculateRecommendedOrder(item.projectedStock, item.consumed);
+            const unallocatedStock = item.inStock - item.allocated;
+            
             return (
               <TableRow key={index} className={cn("transition-colors", getRowColor(stockDaysLeft))}>
                 <TableCell className="font-medium">{item.productName}</TableCell>
-                <TableCell className="text-right">{item.inStock}</TableCell>
-                <TableCell className="text-right text-muted-foreground">{item.consumed}</TableCell>
-                <TableCell className="text-right font-medium">{item.availableStock}</TableCell>
-                <TableCell className="text-right border-l">{item.onOrderP1}</TableCell>
-                <TableCell className="text-right">{item.onOrderP2a}</TableCell>
-                <TableCell className="text-right border-r">{item.onOrderP2b}</TableCell>
-                <TableCell className="text-right">{item.signedQuotations}</TableCell>
-                <TableCell className="text-right font-bold">{item.projectedStock}</TableCell>
-                <TableCell className="text-right font-bold text-foreground">
-                  {stockDaysLeft === Infinity ? '∞' : `${stockDaysLeft}d`}
-                </TableCell>
                 <TableCell className="text-center">
                   <Badge className={stockStatus.color}>
                     {stockStatus.label}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-right font-bold text-foreground">
+                  {stockDaysLeft === Infinity ? '∞' : `${stockDaysLeft}d`}
+                </TableCell>
+                <TableCell className="text-right font-bold">{item.projectedStock}</TableCell>
+                <TableCell className="text-right">{item.inStock}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{item.allocated}</TableCell>
+                <TableCell className="text-right font-medium">{unallocatedStock}</TableCell>
+                <TableCell className="text-right border-l">{item.onOrderP1}</TableCell>
+                <TableCell className="text-right">{item.onOrderP2a}</TableCell>
+                <TableCell className="text-right border-r">{item.onOrderP2b}</TableCell>
+                <TableCell className="text-right">{item.signedQuotations}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{item.consumed}</TableCell>
+                <TableCell className="text-right font-bold text-primary">
+                  {recommendedOrder > 0 ? recommendedOrder : '—'}
                 </TableCell>
               </TableRow>
             );
