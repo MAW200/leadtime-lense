@@ -1,7 +1,7 @@
 import { MetricCard } from "@/components/MetricCard";
 import { InventoryTable } from "@/components/InventoryTable";
 import { ProductDetailPanel } from "@/components/ProductDetailPanel";
-import { Package, TrendingUp, AlertTriangle, ShoppingCart, Filter, BarChart3 } from "lucide-react";
+import { TrendingUp, AlertTriangle, ShoppingCart, Filter, BarChart3, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,15 +51,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-full flex flex-col">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-6 py-4">
+        <div className="px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-lg">
-                <Package className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl font-bold text-foreground">Inventory Action Center</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Monitor inventory levels and take action on critical items
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm">
@@ -75,7 +75,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <div className="flex-1 overflow-y-auto px-8 py-8">
         {isLoading ? (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -198,7 +198,7 @@ const Index = () => {
             </div>
           </>
         )}
-      </main>
+      </div>
 
       <ProductDetailPanel
         item={selectedItem}

@@ -14,6 +14,7 @@ import { Package, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { useProductVendors } from "@/hooks/useInventory";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ProductDetailPanelProps {
   item: InventoryItem | null;
@@ -22,6 +23,7 @@ interface ProductDetailPanelProps {
 }
 
 export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanelProps) => {
+  const navigate = useNavigate();
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: productVendors, isLoading: vendorsLoading } = useProductVendors(item?.id);
 
@@ -57,6 +59,24 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
   const dailyConsumption = item.consumed_30d / 30;
 
   const primaryVendor = productVendors?.find(pv => pv.is_primary) || productVendors?.[0];
+
+  const handleCreateOrder = () => {
+    if (!primaryVendor) {
+      return;
+    }
+
+    navigate('/purchase-orders', {
+      state: {
+        preFill: {
+          vendorId: primaryVendor.vendor_id,
+          productId: item.id,
+          quantity: recommendedOrder,
+          unitPrice: primaryVendor.unit_price,
+        },
+      },
+    });
+    onClose();
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -98,7 +118,12 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
             <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">Recommended Action</h3>
             {recommendedOrder > 0 ? (
               <div className="space-y-3">
-                <Button size="lg" className="w-full text-lg py-6 font-semibold">
+                <Button
+                  size="lg"
+                  className="w-full text-lg py-6 font-semibold"
+                  onClick={handleCreateOrder}
+                  disabled={!primaryVendor}
+                >
                   Create Order: {recommendedOrder} units
                 </Button>
                 <button

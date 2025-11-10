@@ -54,3 +54,61 @@ export type ProductVendor = {
   vendor?: Vendor;
   product?: InventoryItem;
 };
+
+export type InternalRequest = {
+  id: string;
+  request_number: string;
+  requester_name: string;
+  requester_email: string | null;
+  destination_property: string;
+  status: 'pending' | 'fulfilled' | 'cancelled';
+  notes: string | null;
+  fulfilled_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RequestItem = {
+  id: string;
+  request_id: string;
+  product_id: string;
+  quantity_requested: number;
+  quantity_fulfilled: number;
+  created_at: string;
+  product?: InventoryItem;
+};
+
+export type InternalRequestWithItems = InternalRequest & {
+  request_items?: RequestItem[];
+};
+
+export type PurchaseOrder = {
+  id: string;
+  po_number: string;
+  vendor_id: string;
+  status: 'draft' | 'sent' | 'in_transit' | 'received' | 'cancelled';
+  total_amount: number;
+  order_date: string | null;
+  expected_delivery_date: string | null;
+  actual_delivery_date: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  vendor?: Vendor;
+};
+
+export type PurchaseOrderItem = {
+  id: string;
+  po_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  created_at: string;
+  product?: InventoryItem;
+};
+
+export type PurchaseOrderWithItems = PurchaseOrder & {
+  purchase_order_items?: PurchaseOrderItem[];
+};
