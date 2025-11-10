@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
   title: string;
@@ -11,32 +12,36 @@ interface MetricCardProps {
   iconBgColor?: string;
   onClick?: () => void;
   clickable?: boolean;
+  actionCard?: boolean;
+  bgColor?: string;
 }
 
-export const MetricCard = ({ 
-  title, 
-  value, 
-  icon: Icon, 
-  trend, 
+export const MetricCard = ({
+  title,
+  value,
+  icon: Icon,
+  trend,
   trendValue,
   sparklineData,
   iconBgColor = "bg-primary",
   onClick,
-  clickable = false
+  clickable = false,
+  actionCard = false,
+  bgColor
 }: MetricCardProps) => {
   const renderSparkline = () => {
     if (!sparklineData || sparklineData.length < 2) return null;
-    
+
     const max = Math.max(...sparklineData);
     const min = Math.min(...sparklineData);
     const range = max - min || 1;
-    
+
     const points = sparklineData.map((value, index) => {
       const x = (index / (sparklineData.length - 1)) * 100;
       const y = 100 - ((value - min) / range) * 100;
       return `${x},${y}`;
     }).join(' ');
-    
+
     return (
       <svg className="w-full h-8 mt-2" viewBox="0 0 100 100" preserveAspectRatio="none">
         <polyline
@@ -51,12 +56,13 @@ export const MetricCard = ({
   };
 
   return (
-    <Card 
-      className={`p-6 transition-all ${
-        clickable 
-          ? 'hover:shadow-lg hover:scale-105 cursor-pointer' 
-          : 'hover:shadow-lg'
-      }`}
+    <Card
+      className={cn(
+        "p-6 transition-all",
+        clickable && "hover:shadow-lg hover:scale-[1.02] cursor-pointer",
+        !clickable && "hover:shadow-lg",
+        bgColor
+      )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-2">
@@ -68,12 +74,18 @@ export const MetricCard = ({
           <Icon className="h-5 w-5 text-white" />
         </div>
       </div>
-      {(trend || trendValue) && (
+      {actionCard && clickable && (
+        <div className="mt-3 flex items-center text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+          <span>View {value} Items</span>
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </div>
+      )}
+      {!actionCard && (trend || trendValue) && (
         <div className="mt-2">
           {trendValue && (
             <p className={`text-sm font-medium ${
-              trendValue.startsWith('+') ? 'text-success' : 
-              trendValue.startsWith('-') ? 'text-destructive' : 
+              trendValue.startsWith('+') ? 'text-success' :
+              trendValue.startsWith('-') ? 'text-destructive' :
               'text-muted-foreground'
             }`}>
               {trendValue}
