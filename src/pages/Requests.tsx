@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TopHeader } from '@/components/TopHeader';
 import {
   Table,
   TableBody,
@@ -49,22 +50,16 @@ const Requests = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Internal Requests</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Track and manage inventory requests from different properties
-              </p>
-            </div>
-            <Button onClick={() => setIsNewRequestOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Request
-            </Button>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Internal Requests"
+        description="Track and manage inventory requests from different properties"
+        actions={
+          <Button onClick={() => setIsNewRequestOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Request
+          </Button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">

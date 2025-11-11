@@ -1,22 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { TopHeader } from '@/components/TopHeader';
 import { Settings as SettingsIcon, Bell, Database, Users } from 'lucide-react';
 
 const Settings = () => {
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Configure your application preferences and settings
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Settings"
+        description="Configure your application preferences and settings"
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="max-w-4xl space-y-6">

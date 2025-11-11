@@ -69,10 +69,6 @@ export const UserProfileMenu = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-          Development Tools
-        </DropdownMenuLabel>
-
         {isOnsite ? (
           <DropdownMenuItem onClick={handleSwitchToAdmin} className="cursor-pointer">
             <ArrowRightLeft className="h-4 w-4 mr-2" />
@@ -81,7 +77,7 @@ export const UserProfileMenu = () => {
         ) : (
           <DropdownMenuItem onClick={handleSwitchToOnsite} className="cursor-pointer">
             <ArrowRightLeft className="h-4 w-4 mr-2" />
-            Switch to Onsite View
+            Preview as Onsite Team
           </DropdownMenuItem>
         )}
 

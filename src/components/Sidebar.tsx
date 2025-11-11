@@ -59,12 +59,6 @@ export const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-
-      <div className="border-t p-4">
-        <div className="text-xs text-muted-foreground text-center">
-          Admin View v1.0.0
-        </div>
-      </div>
     </div>
   );
 };

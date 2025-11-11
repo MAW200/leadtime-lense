@@ -1,6 +1,7 @@
 import { MetricCard } from "@/components/MetricCard";
 import { InventoryTable } from "@/components/InventoryTable";
 import { ProductDetailPanel } from "@/components/ProductDetailPanel";
+import { TopHeader } from "@/components/TopHeader";
 import { TrendingUp, AlertTriangle, ShoppingCart, Filter, BarChart3, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -52,28 +53,22 @@ const Index = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Monitor inventory levels and take action on critical items
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-              <Button size="sm">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Dashboard"
+        description="Monitor inventory levels and take action on critical items"
+        actions={
+          <>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+            <Button size="sm">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         {isLoading ? (

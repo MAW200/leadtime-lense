@@ -1,14 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TopHeader } from '@/components/TopHeader';
 import {
   Dialog,
   DialogContent,
@@ -27,8 +22,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, FolderKanban } from 'lucide-react';
+import { Plus, FolderKanban, Package, AlertCircle } from 'lucide-react';
 import { useProjects, useCreateProject } from '@/hooks/useProjects';
+import { useProjectStats } from '@/hooks/useProjectStats';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -41,7 +37,9 @@ const Projects = () => {
   const [status, setStatus] = useState<'active' | 'completed' | 'on_hold'>('active');
   const [description, setDescription] = useState('');
 
+  const navigate = useNavigate();
   const { data: projects, isLoading } = useProjects(statusFilter);
+  const { data: projectStats } = useProjectStats();
   const createProject = useCreateProject();
 
   const getStatusBadge = (status: string) => {
@@ -85,24 +83,26 @@ const Projects = () => {
     setIsNewProjectOpen(false);
   };
 
+  const getProjectStats = (projectId: string) => {
+    const stats = projectStats?.find(s => s.project_id === projectId);
+    return {
+      totalProducts: stats?.total_products_allocated || 0,
+      pendingRequests: stats?.pending_requests || 0,
+    };
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Projects</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage projects and track inventory usage by location
-              </p>
-            </div>
-            <Button onClick={() => setIsNewProjectOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Projects"
+        description="Manage projects and track inventory usage by location"
+        actions={
+          <Button onClick={() => setIsNewProjectOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Project
+          </Button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">
@@ -122,41 +122,59 @@ const Projects = () => {
               ))}
             </div>
           ) : projects && projects.length > 0 ? (
-            <div className="rounded-lg border bg-card overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Project Name</TableHead>
-                    <TableHead className="font-semibold">Location</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold">Created</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {projects.map((project) => (
-                    <TableRow
-                      key={project.id}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    >
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{project.name}</p>
-                          {project.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {project.description}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project) => {
+                const stats = getProjectStats(project.id);
+                return (
+                  <Card
+                    key={project.id}
+                    className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-semibold mb-1">
+                            {project.name}
+                          </CardTitle>
+                          {project.location && (
+                            <p className="text-sm text-muted-foreground">
+                              {project.location}
                             </p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>{project.location || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(project.status)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(project.created_at), 'MMM d, yyyy')}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        {getStatusBadge(project.status)}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {project.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {project.description}
+                        </p>
+                      )}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">Products Allocated</span>
+                          </div>
+                          <span className="text-lg font-bold">{stats.totalProducts}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">Pending Requests</span>
+                          </div>
+                          <span className="text-lg font-bold">{stats.pendingRequests}</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                        Created {format(new Date(project.created_at), 'MMM d, yyyy')}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 border rounded-lg bg-card">

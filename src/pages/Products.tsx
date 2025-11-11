@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TopHeader } from '@/components/TopHeader';
 import {
   Table,
   TableBody,
@@ -27,18 +28,10 @@ const Products = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Products</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage your product catalog and vendor relationships
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Products"
+        description="Manage your product catalog and vendor relationships"
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">

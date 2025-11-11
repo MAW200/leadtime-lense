@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TopHeader } from '@/components/TopHeader';
 import {
   Table,
   TableBody,
@@ -90,22 +91,16 @@ const AuditLog = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Audit Log</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Complete audit trail of all system activities
-              </p>
-            </div>
-            <Button variant="outline" onClick={exportToCSV} disabled={!logs || logs.length === 0}>
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Audit Log"
+        description="Complete audit trail of all system activities"
+        actions={
+          <Button variant="outline" onClick={exportToCSV} disabled={!logs || logs.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">

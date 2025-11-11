@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TopHeader } from '@/components/TopHeader';
 import {
   Table,
   TableBody,
@@ -45,22 +46,16 @@ const PurchaseOrders = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Purchase Orders</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage purchase orders sent to vendors
-              </p>
-            </div>
-            <Button onClick={() => setIsNewPOOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New PO
-            </Button>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        title="Purchase Orders"
+        description="Manage purchase orders sent to vendors"
+        actions={
+          <Button onClick={() => setIsNewPOOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New PO
+          </Button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">

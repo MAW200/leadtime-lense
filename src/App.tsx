@@ -12,6 +12,7 @@ import PurchaseOrders from "./pages/PurchaseOrders";
 import Products from "./pages/Products";
 import Settings from "./pages/Settings";
 import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 import AuditLog from "./pages/AuditLog";
 import OnsiteBrowse from "./pages/OnsiteBrowse";
 import OnsiteRequests from "./pages/OnsiteRequests";
@@ -40,6 +41,7 @@ const AppRoutes = () => {
       <Route element={<MainLayout><PurchaseOrders /></MainLayout>} path="/purchase-orders" />
       <Route element={<MainLayout><Products /></MainLayout>} path="/products" />
       <Route element={<MainLayout><Projects /></MainLayout>} path="/projects" />
+      <Route element={<MainLayout><ProjectDetail /></MainLayout>} path="/projects/:id" />
       <Route element={<MainLayout><AuditLog /></MainLayout>} path="/audit-log" />
       <Route element={<MainLayout><Settings /></MainLayout>} path="/settings" />
       <Route path="*" element={<NotFound />} />
