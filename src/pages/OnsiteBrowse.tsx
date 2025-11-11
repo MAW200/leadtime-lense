@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,14 +9,34 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Search } from 'lucide-react';
+import { Package, Search, Plus } from 'lucide-react';
 import { useInventoryItems } from '@/hooks/useInventory';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader } from '@/components/PageHeader';
+import { OnsiteRequestModal } from '@/components/OnsiteRequestModal';
+import { InventoryItem } from '@/lib/supabase';
 
 const OnsiteBrowse = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
 
   const { data: products, isLoading } = useInventoryItems();
+
+  const handleProductClick = (product: InventoryItem) => {
+    setSelectedProduct(product);
+    setIsRequestModalOpen(true);
+  };
+
+  const handleNewRequest = () => {
+    setSelectedProduct(null);
+    setIsRequestModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsRequestModalOpen(false);
+    setSelectedProduct(null);
+  };
 
   const filteredProducts = products?.filter(
     (product) =>
@@ -29,16 +50,16 @@ const OnsiteBrowse = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b bg-card">
-        <div className="px-8 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Browse Inventory</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              View available inventory items and their quantities
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Browse Inventory"
+        description="Click any item to create a request"
+        actions={
+          <Button onClick={handleNewRequest}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Request
+          </Button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">
@@ -68,7 +89,13 @@ const OnsiteBrowse = () => {
                 const isOutOfStock = available === 0;
 
                 return (
-                  <Card key={product.id} className={isOutOfStock ? 'opacity-60' : ''}>
+                  <Card
+                    key={product.id}
+                    className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
+                      isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                    onClick={() => !isOutOfStock && handleProductClick(product)}
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
@@ -110,6 +137,13 @@ const OnsiteBrowse = () => {
                             <span className="ml-2 font-medium">{product.allocated}</span>
                           </div>
                         </div>
+                        {!isOutOfStock && (
+                          <div className="pt-2 border-t">
+                            <p className="text-xs text-center text-muted-foreground">
+                              Click to claim this item
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -129,6 +163,12 @@ const OnsiteBrowse = () => {
           )}
         </div>
       </div>
+
+      <OnsiteRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={handleCloseModal}
+        prefilledProduct={selectedProduct}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -25,10 +25,12 @@ import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { PhotoUpload } from './PhotoUpload';
 import { useRole } from '@/contexts/RoleContext';
 import { Alert, AlertDescription } from './ui/alert';
+import { InventoryItem } from '@/lib/supabase';
 
 interface OnsiteRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
+  prefilledProduct?: InventoryItem | null;
 }
 
 interface RequestItem {
@@ -36,7 +38,7 @@ interface RequestItem {
   quantity_requested: number;
 }
 
-export const OnsiteRequestModal = ({ isOpen, onClose }: OnsiteRequestModalProps) => {
+export const OnsiteRequestModal = ({ isOpen, onClose, prefilledProduct }: OnsiteRequestModalProps) => {
   const { userName, currentRole } = useRole();
   const [projectId, setProjectId] = useState('');
   const [notes, setNotes] = useState('');
@@ -46,6 +48,14 @@ export const OnsiteRequestModal = ({ isOpen, onClose }: OnsiteRequestModalProps)
   const { data: products } = useInventoryItems();
   const { data: projects } = useProjects('active');
   const createRequest = useCreateRequest();
+
+  useEffect(() => {
+    if (isOpen && prefilledProduct) {
+      setItems([{ product_id: prefilledProduct.id, quantity_requested: 1 }]);
+    } else if (isOpen && !prefilledProduct) {
+      setItems([]);
+    }
+  }, [isOpen, prefilledProduct]);
 
   const handleAddItem = () => {
     setItems([...items, { product_id: '', quantity_requested: 1 }]);

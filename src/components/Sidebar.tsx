@@ -9,7 +9,6 @@ import {
   FolderKanban,
   ClipboardList,
 } from 'lucide-react';
-import { RoleToggle } from './RoleToggle';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -24,7 +23,7 @@ const navigation = [
 export const Sidebar = () => {
   return (
     <div className="flex h-screen w-64 flex-col border-r bg-card">
-      <div className="flex h-16 items-center justify-between border-b px-4">
+      <div className="flex h-16 items-center border-b px-6">
         <div className="flex items-center gap-2">
           <div className="bg-primary p-2 rounded-lg">
             <Package className="h-5 w-5 text-primary-foreground" />
@@ -34,10 +33,6 @@ export const Sidebar = () => {
             <p className="text-xs text-muted-foreground">Action Center</p>
           </div>
         </div>
-      </div>
-
-      <div className="border-b px-3 py-3">
-        <RoleToggle />
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
