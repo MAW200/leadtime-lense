@@ -1,6 +1,7 @@
 import { useRole } from '@/contexts/RoleContext';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { Badge } from './ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { User, LogOut, ArrowRightLeft } from 'lucide-react';
+import { User, LogOut, ArrowRightLeft, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const UserProfileMenu = () => {
@@ -33,6 +34,11 @@ export const UserProfileMenu = () => {
     navigate('/');
   };
 
+  const handleSwitchToOnsite = () => {
+    setCurrentRole('onsite_team');
+    navigate('/onsite/browse');
+  };
+
   const handleLogout = () => {
     console.log('Logout clicked');
   };
@@ -48,33 +54,44 @@ export const UserProfileMenu = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col space-y-2">
             <p className="text-sm font-medium leading-none">Logged in as:</p>
             <p className="text-sm font-semibold">{userName}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Role: <span className="font-medium text-foreground">
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Role:</p>
+              <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
                 {isAdmin ? 'Admin' : 'Onsite Team'}
-              </span>
-            </p>
+              </Badge>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {isOnsite && (
-          <>
-            <DropdownMenuItem onClick={handleSwitchToAdmin} className="cursor-pointer">
-              <ArrowRightLeft className="h-4 w-4 mr-2" />
-              Switch to Admin View
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
+
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+          Development Tools
+        </DropdownMenuLabel>
+
+        {isOnsite ? (
+          <DropdownMenuItem onClick={handleSwitchToAdmin} className="cursor-pointer">
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
+            Switch to Admin View
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={handleSwitchToOnsite} className="cursor-pointer">
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
+            Switch to Onsite View
+          </DropdownMenuItem>
         )}
+
+        <DropdownMenuSeparator />
+
         {isAdmin && (
           <>
             <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
-              <User className="h-4 w-4 mr-2" />
-              Profile Settings
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
