@@ -187,3 +187,39 @@ export const useDeletePurchaseOrder = () => {
     },
   });
 };
+
+export const useCompleteQAInspection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (qaData: {
+      po_id: string;
+      good_quality_qty: number;
+      bad_quality_qty: number;
+      qa_photo_url: string;
+      qa_completed_by: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('purchase_orders')
+        .update({
+          good_quality_qty: qaData.good_quality_qty,
+          bad_quality_qty: qaData.bad_quality_qty,
+          qa_photo_url: qaData.qa_photo_url,
+          qa_completed_at: new Date().toISOString(),
+          qa_completed_by: qaData.qa_completed_by,
+          status: 'received',
+          actual_delivery_date: new Date().toISOString(),
+        })
+        .eq('id', qaData.po_id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-order'] });
+    },
+  });
+};

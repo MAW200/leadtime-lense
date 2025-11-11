@@ -90,8 +90,9 @@ const Requests = () => {
                     <TableHead className="font-semibold">Request ID</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
                     <TableHead className="font-semibold">Requested By</TableHead>
-                    <TableHead className="font-semibold">Destination</TableHead>
+                    <TableHead className="font-semibold">Project</TableHead>
                     <TableHead className="font-semibold">Items</TableHead>
+                    <TableHead className="font-semibold">Photo</TableHead>
                     <TableHead className="font-semibold">Created</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -103,6 +104,9 @@ const Requests = () => {
                     >
                       <TableCell className="font-medium font-mono">
                         {request.request_number}
+                        {request.created_by_role === 'onsite_team' && (
+                          <Badge variant="outline" className="ml-2 text-xs">Onsite</Badge>
+                        )}
                       </TableCell>
                       <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
@@ -115,9 +119,22 @@ const Requests = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{request.destination_property}</TableCell>
+                      <TableCell>
+                        {request.project?.name || request.destination_property}
+                      </TableCell>
                       <TableCell className="text-sm">
                         {getItemsSummary(request)}
+                      </TableCell>
+                      <TableCell>
+                        {request.photo_url ? (
+                          <img
+                            src={request.photo_url}
+                            alt="Request"
+                            className="w-12 h-12 object-cover rounded border"
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No photo</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(request.created_at), 'MMM d, yyyy')}

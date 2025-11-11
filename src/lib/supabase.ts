@@ -64,6 +64,9 @@ export type InternalRequest = {
   status: 'pending' | 'fulfilled' | 'cancelled';
   notes: string | null;
   fulfilled_date: string | null;
+  project_id: string | null;
+  photo_url: string | null;
+  created_by_role: string;
   created_at: string;
   updated_at: string;
 };
@@ -80,6 +83,7 @@ export type RequestItem = {
 
 export type InternalRequestWithItems = InternalRequest & {
   request_items?: RequestItem[];
+  project?: Project;
 };
 
 export type PurchaseOrder = {
@@ -93,6 +97,11 @@ export type PurchaseOrder = {
   actual_delivery_date: string | null;
   notes: string | null;
   created_by: string | null;
+  good_quality_qty: number;
+  bad_quality_qty: number;
+  qa_photo_url: string | null;
+  qa_completed_at: string | null;
+  qa_completed_by: string | null;
   created_at: string;
   updated_at: string;
   vendor?: Vendor;
@@ -112,3 +121,39 @@ export type PurchaseOrderItem = {
 export type PurchaseOrderWithItems = PurchaseOrder & {
   purchase_order_items?: PurchaseOrderItem[];
 };
+
+export type Project = {
+  id: string;
+  name: string;
+  location: string | null;
+  status: 'active' | 'completed' | 'on_hold';
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AuditLog = {
+  id: string;
+  timestamp: string;
+  user_name: string;
+  user_role: 'admin' | 'onsite_team' | 'system';
+  action_type: string;
+  action_description: string;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  photo_url: string | null;
+  metadata: Record<string, any> | null;
+  created_at: string;
+};
+
+export type UserProfile = {
+  id: string;
+  name: string;
+  email: string | null;
+  role: 'admin' | 'onsite_team';
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserRole = 'admin' | 'onsite_team';

@@ -12,7 +12,8 @@ export const useInternalRequests = (status?: string) => {
           request_items(
             *,
             product:inventory_items(*)
-          )
+          ),
+          project:projects(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -41,7 +42,8 @@ export const useInternalRequest = (id?: string) => {
           request_items(
             *,
             product:inventory_items(*)
-          )
+          ),
+          project:projects(*)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -62,6 +64,9 @@ export const useCreateRequest = () => {
       requester_email?: string;
       destination_property: string;
       notes?: string;
+      project_id?: string;
+      photo_url?: string;
+      created_by_role?: 'admin' | 'onsite_team';
       items: { product_id: string; quantity_requested: number }[];
     }) => {
       const { data: requestNumber } = await supabase.rpc('generate_request_number');
@@ -74,6 +79,9 @@ export const useCreateRequest = () => {
           requester_email: request.requester_email,
           destination_property: request.destination_property,
           notes: request.notes,
+          project_id: request.project_id,
+          photo_url: request.photo_url,
+          created_by_role: request.created_by_role || 'admin',
           status: 'pending',
         })
         .select()

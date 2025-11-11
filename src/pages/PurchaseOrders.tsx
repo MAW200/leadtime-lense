@@ -10,12 +10,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, ShoppingCart } from 'lucide-react';
-import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { Plus, ShoppingCart, ClipboardCheck } from 'lucide-react';
+import { usePurchaseOrders, useCompleteQAInspection } from '@/hooks/usePurchaseOrders';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { NewPOModal } from '@/components/NewPOModal';
+import { QAReceivingModal } from '@/components/QAReceivingModal';
 import { useLocation } from 'react-router-dom';
+import { PurchaseOrderWithItems } from '@/lib/supabase';
 
 const PurchaseOrders = () => {
   const location = useLocation();
@@ -23,8 +25,10 @@ const PurchaseOrders = () => {
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isNewPOOpen, setIsNewPOOpen] = useState(!!preFillData);
+  const [selectedPOForQA, setSelectedPOForQA] = useState<PurchaseOrderWithItems | null>(null);
 
   const { data: purchaseOrders, isLoading } = usePurchaseOrders(statusFilter);
+  const completeQA = useCompleteQAInspection();
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -87,13 +91,14 @@ const PurchaseOrders = () => {
                     <TableHead className="font-semibold text-right">Total Cost</TableHead>
                     <TableHead className="font-semibold">Order Date</TableHead>
                     <TableHead className="font-semibold">Expected Delivery</TableHead>
+                    <TableHead className="font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {purchaseOrders.map((po) => (
                     <TableRow
                       key={po.id}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="hover:bg-muted/50 transition-colors"
                     >
                       <TableCell className="font-medium font-mono">
                         {po.po_number}
@@ -122,6 +127,18 @@ const PurchaseOrders = () => {
                           ? format(new Date(po.expected_delivery_date), 'MMM d, yyyy')
                           : '-'}
                       </TableCell>
+                      <TableCell>
+                        {po.status === 'in_transit' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedPOForQA(po)}
+                          >
+                            <ClipboardCheck className="h-4 w-4 mr-2" />
+                            Receive & QA
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -149,6 +166,15 @@ const PurchaseOrders = () => {
         isOpen={isNewPOOpen}
         onClose={() => setIsNewPOOpen(false)}
         preFillData={preFillData}
+      />
+
+      <QAReceivingModal
+        isOpen={!!selectedPOForQA}
+        onClose={() => setSelectedPOForQA(null)}
+        purchaseOrder={selectedPOForQA}
+        onComplete={async (qaData) => {
+          await completeQA.mutateAsync(qaData);
+        }}
       />
     </div>
   );
