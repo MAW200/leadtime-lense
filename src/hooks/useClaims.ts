@@ -87,7 +87,8 @@ export const useCreateClaim = () => {
       const claimItems = params.items.map((item) => ({
         claim_id: claim.id,
         product_id: item.productId,
-        quantity: item.quantity,
+        quantity_requested: item.quantity,
+        quantity_approved: 0,
       }));
 
       const { error: itemsError } = await supabase
@@ -123,6 +124,7 @@ export const useApproveClaim = () => {
       claimId: string;
       warehouseAdminId: string;
       warehouseAdminName: string;
+      approvedQuantities: Record<string, number>;
     }) => {
       const { data: claim, error: fetchError } = await supabase
         .from('claims')
@@ -138,23 +140,28 @@ export const useApproveClaim = () => {
 
       if (fetchError) throw fetchError;
 
-      const { error: updateError } = await supabase
-        .from('claims')
-        .update({
-          status: 'approved',
-          warehouse_admin_id: params.warehouseAdminId,
-          warehouse_admin_name: params.warehouseAdminName,
-          processed_at: new Date().toISOString(),
-        })
-        .eq('id', params.claimId);
-
-      if (updateError) throw updateError;
+      let isPartialApproval = false;
+      let totalRequested = 0;
+      let totalApproved = 0;
 
       for (const item of claim.claim_items) {
+        const approvedQty = params.approvedQuantities[item.id] || item.quantity_requested;
+        totalRequested += item.quantity_requested;
+        totalApproved += approvedQty;
+
+        if (approvedQty < item.quantity_requested) {
+          isPartialApproval = true;
+        }
+
+        await supabase
+          .from('claim_items')
+          .update({ quantity_approved: approvedQty })
+          .eq('id', item.id);
+
         const { error: inventoryError } = await supabase
           .from('inventory_items')
           .update({
-            in_stock: (item.product.in_stock - item.quantity),
+            in_stock: (item.product.in_stock - approvedQty),
           })
           .eq('id', item.product_id);
 
@@ -171,36 +178,47 @@ export const useApproveClaim = () => {
           await supabase
             .from('project_materials')
             .update({
-              claimed_quantity: bomItem.claimed_quantity + item.quantity,
+              claimed_quantity: bomItem.claimed_quantity + approvedQty,
             })
             .eq('id', bomItem.id);
         }
       }
 
-      const { data: ceoAdmins } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('role', 'ceo_admin');
+      const status = isPartialApproval ? 'partial_approved' : 'approved';
 
-      if (ceoAdmins) {
-        const notifications = ceoAdmins.map((admin) => ({
-          recipient_user_id: admin.id,
-          message: `${claim.onsite_user_name} claimed products for project. Approved by ${params.warehouseAdminName}.`,
-          related_claim_id: params.claimId,
-          is_read: false,
-        }));
+      const { error: updateError } = await supabase
+        .from('claims')
+        .update({
+          status,
+          warehouse_admin_id: params.warehouseAdminId,
+          warehouse_admin_name: params.warehouseAdminName,
+          processed_at: new Date().toISOString(),
+        })
+        .eq('id', params.claimId);
 
-        await supabase.from('notifications').insert(notifications);
-      }
+      if (updateError) throw updateError;
+
+      const notificationMessage = isPartialApproval
+        ? `Your claim was partially approved (${totalApproved} of ${totalRequested} units) by ${params.warehouseAdminName}.`
+        : `Your claim was approved by ${params.warehouseAdminName}.`;
+
+      await supabase.from('notifications').insert({
+        recipient_user_id: claim.onsite_user_id,
+        recipient_role: 'onsite_team',
+        message: notificationMessage,
+        notification_type: isPartialApproval ? 'claim_partial_approved' : 'claim_approved',
+        related_claim_id: params.claimId,
+        is_read: false,
+      });
 
       await supabase.from('audit_logs').insert({
         user_name: params.warehouseAdminName,
         user_role: 'warehouse_admin',
-        action_type: 'claim_approved',
-        action_description: `Approved claim ${claim.claim_number}`,
+        action_type: isPartialApproval ? 'claim_partially_approved' : 'claim_approved',
+        action_description: `${isPartialApproval ? 'Partially approved' : 'Approved'} claim ${claim.claim_number}`,
         related_entity_type: 'claim',
         related_entity_id: params.claimId,
-        metadata: { claim_number: claim.claim_number, onsite_user: claim.onsite_user_name },
+        metadata: { claim_number: claim.claim_number, onsite_user: claim.onsite_user_name, total_requested: totalRequested, total_approved: totalApproved },
       });
 
       return claim;

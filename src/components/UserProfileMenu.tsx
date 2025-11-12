@@ -14,11 +14,12 @@ import { User, LogOut, ArrowRightLeft, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const UserProfileMenu = () => {
-  const { currentRole, setCurrentRole, userName } = useRole();
+  const { currentRole, actualRole, setCurrentRole, isPreviewMode, exitPreviewMode, userName } = useRole();
   const navigate = useNavigate();
 
-  const isAdmin = currentRole === 'admin';
-  const isOnsite = currentRole === 'onsite_team';
+  const isCEOAdmin = actualRole === 'ceo_admin';
+  const isWarehouseAdmin = currentRole === 'warehouse_admin';
+  const isOnsiteTeam = currentRole === 'onsite_team';
 
   const getInitials = (name: string) => {
     return name
@@ -29,14 +30,32 @@ export const UserProfileMenu = () => {
       .slice(0, 2);
   };
 
-  const handleSwitchToAdmin = () => {
-    setCurrentRole('admin');
-    navigate('/');
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'ceo_admin':
+        return 'CEO/Admin';
+      case 'warehouse_admin':
+        return 'Warehouse Admin';
+      case 'onsite_team':
+        return 'Onsite Team';
+      default:
+        return 'Admin';
+    }
+  };
+
+  const handleSwitchToWarehouse = () => {
+    setCurrentRole('warehouse_admin');
+    navigate('/warehouse/pending-claims');
   };
 
   const handleSwitchToOnsite = () => {
     setCurrentRole('onsite_team');
-    navigate('/onsite/browse');
+    navigate('/onsite/projects');
+  };
+
+  const handleReturnToAdmin = () => {
+    exitPreviewMode();
+    navigate('/');
   };
 
   const handleLogout = () => {
@@ -61,29 +80,46 @@ export const UserProfileMenu = () => {
             <p className="text-sm font-semibold">{userName}</p>
             <div className="flex items-center gap-2">
               <p className="text-xs text-muted-foreground">Role:</p>
-              <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
-                {isAdmin ? 'Admin' : 'Onsite Team'}
+              <Badge variant="default" className="text-xs">
+                {getRoleLabel(actualRole)}
               </Badge>
             </div>
+            {isPreviewMode && (
+              <div className="flex items-center gap-2 pt-1">
+                <p className="text-xs text-muted-foreground">Viewing as:</p>
+                <Badge variant="secondary" className="text-xs">
+                  {getRoleLabel(currentRole)}
+                </Badge>
+              </div>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {isOnsite ? (
-          <DropdownMenuItem onClick={handleSwitchToAdmin} className="cursor-pointer">
+        {isPreviewMode ? (
+          <DropdownMenuItem onClick={handleReturnToAdmin} className="cursor-pointer">
             <ArrowRightLeft className="h-4 w-4 mr-2" />
-            Switch to Admin View
+            Return to Admin View
           </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem onClick={handleSwitchToOnsite} className="cursor-pointer">
-            <ArrowRightLeft className="h-4 w-4 mr-2" />
-            Preview as Onsite Team
-          </DropdownMenuItem>
-        )}
+        ) : isCEOAdmin ? (
+          <>
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1.5">
+              View As
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleSwitchToWarehouse} className="cursor-pointer">
+              <ArrowRightLeft className="h-4 w-4 mr-2" />
+              Switch to Warehouse Admin View
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSwitchToOnsite} className="cursor-pointer">
+              <ArrowRightLeft className="h-4 w-4 mr-2" />
+              Switch to Onsite Team View
+            </DropdownMenuItem>
+          </>
+        ) : null}
 
         <DropdownMenuSeparator />
 
-        {isAdmin && (
+        {(isCEOAdmin && !isPreviewMode) && (
           <>
             <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
               <Settings className="h-4 w-4 mr-2" />

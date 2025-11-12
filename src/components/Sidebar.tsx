@@ -8,6 +8,7 @@ import {
   Settings,
   FolderKanban,
   ClipboardList,
+  FileStack,
 } from 'lucide-react';
 
 const navigation = [
@@ -15,6 +16,7 @@ const navigation = [
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart },
   { name: 'Products', href: '/products', icon: Package },
   { name: 'Projects', href: '/projects', icon: FolderKanban },
+  { name: 'Project Templates', href: '/project-templates', icon: FileStack },
   { name: 'Audit Log', href: '/audit-log', icon: ClipboardList },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

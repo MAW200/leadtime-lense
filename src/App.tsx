@@ -13,11 +13,14 @@ import Products from "./pages/Products";
 import Settings from "./pages/Settings";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import ProjectTemplates from "./pages/ProjectTemplates";
 import AuditLog from "./pages/AuditLog";
 import OnsiteMyProjects from "./pages/OnsiteMyProjects";
 import OnsiteProjectBOM from "./pages/OnsiteProjectBOM";
 import WarehousePendingClaims from "./pages/WarehousePendingClaims";
 import WarehouseClaimHistory from "./pages/WarehouseClaimHistory";
+import WarehousePendingReturns from "./pages/WarehousePendingReturns";
+import WarehouseStockAdjustments from "./pages/WarehouseStockAdjustments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +42,8 @@ const AppRoutes = () => {
     return (
       <Routes>
         <Route element={<WarehouseLayout><WarehousePendingClaims /></WarehouseLayout>} path="/warehouse/pending-claims" />
+        <Route element={<WarehouseLayout><WarehousePendingReturns /></WarehouseLayout>} path="/warehouse/pending-returns" />
+        <Route element={<WarehouseLayout><WarehouseStockAdjustments /></WarehouseLayout>} path="/warehouse/stock-adjustments" />
         <Route element={<WarehouseLayout><WarehouseClaimHistory /></WarehouseLayout>} path="/warehouse/claim-history" />
         <Route path="*" element={<Navigate to="/warehouse/pending-claims" replace />} />
       </Routes>
@@ -52,6 +57,7 @@ const AppRoutes = () => {
       <Route element={<MainLayout><Products /></MainLayout>} path="/products" />
       <Route element={<MainLayout><Projects /></MainLayout>} path="/projects" />
       <Route element={<MainLayout><ProjectDetail /></MainLayout>} path="/projects/:id" />
+      <Route element={<MainLayout><ProjectTemplates /></MainLayout>} path="/project-templates" />
       <Route element={<MainLayout><AuditLog /></MainLayout>} path="/audit-log" />
       <Route element={<MainLayout><Settings /></MainLayout>} path="/settings" />
       <Route path="*" element={<NotFound />} />

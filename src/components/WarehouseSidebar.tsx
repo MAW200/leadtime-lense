@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Warehouse, ClipboardList, History } from 'lucide-react';
+import { Warehouse, ClipboardList, History, PackageX, Settings } from 'lucide-react';
 
 const warehouseNavigation = [
   { name: 'Pending Claims', href: '/warehouse/pending-claims', icon: ClipboardList },
+  { name: 'Pending Returns', href: '/warehouse/pending-returns', icon: PackageX },
+  { name: 'Stock Adjustments', href: '/warehouse/stock-adjustments', icon: Settings },
   { name: 'Claim History', href: '/warehouse/claim-history', icon: History },
 ];
 
