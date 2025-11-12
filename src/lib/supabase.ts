@@ -136,7 +136,7 @@ export type AuditLog = {
   id: string;
   timestamp: string;
   user_name: string;
-  user_role: 'admin' | 'onsite_team' | 'system';
+  user_role: 'ceo_admin' | 'warehouse_admin' | 'onsite_team' | 'system';
   action_type: string;
   action_description: string;
   related_entity_type: string | null;
@@ -150,10 +150,69 @@ export type UserProfile = {
   id: string;
   name: string;
   email: string | null;
-  role: 'admin' | 'onsite_team';
+  role: 'ceo_admin' | 'warehouse_admin' | 'onsite_team';
   is_active: boolean;
   created_at: string;
   updated_at: string;
 };
 
-export type UserRole = 'admin' | 'onsite_team';
+export type UserRole = 'ceo_admin' | 'warehouse_admin' | 'onsite_team';
+
+export type ProjectMaterial = {
+  id: string;
+  project_id: string;
+  product_id: string;
+  phase: 'P1' | 'P2a' | 'P2b';
+  required_quantity: number;
+  claimed_quantity: number;
+  created_at: string;
+  updated_at: string;
+  product?: InventoryItem;
+};
+
+export type Claim = {
+  id: string;
+  claim_number: string;
+  project_id: string;
+  onsite_user_id: string;
+  onsite_user_name: string;
+  warehouse_admin_id: string | null;
+  warehouse_admin_name: string | null;
+  status: 'pending' | 'approved' | 'denied';
+  photo_url: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  processed_at: string | null;
+  project?: Project;
+};
+
+export type ClaimItem = {
+  id: string;
+  claim_id: string;
+  product_id: string;
+  quantity: number;
+  created_at: string;
+  product?: InventoryItem;
+};
+
+export type ClaimWithItems = Claim & {
+  claim_items?: ClaimItem[];
+};
+
+export type Notification = {
+  id: string;
+  recipient_user_id: string;
+  message: string;
+  related_claim_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type UserProject = {
+  id: string;
+  user_id: string;
+  project_id: string;
+  created_at: string;
+  project?: Project;
+};

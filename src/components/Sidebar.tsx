@@ -12,7 +12,6 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Requests', href: '/requests', icon: FileText },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart },
   { name: 'Products', href: '/products', icon: Package },
   { name: 'Projects', href: '/projects', icon: FolderKanban },

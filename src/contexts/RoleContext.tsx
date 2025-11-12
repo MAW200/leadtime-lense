@@ -16,11 +16,11 @@ const USER_NAME_STORAGE_KEY = 'inventory_user_name';
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [currentRole, setCurrentRoleState] = useState<UserRole>(() => {
     const stored = localStorage.getItem(ROLE_STORAGE_KEY);
-    return (stored === 'admin' || stored === 'onsite_team') ? stored : 'admin';
+    return (stored === 'ceo_admin' || stored === 'warehouse_admin' || stored === 'onsite_team') ? stored : 'ceo_admin';
   });
 
   const [userName, setUserNameState] = useState<string>(() => {
-    return localStorage.getItem(USER_NAME_STORAGE_KEY) || 'Admin User';
+    return localStorage.getItem(USER_NAME_STORAGE_KEY) || 'CEO Admin';
   });
 
   const setCurrentRole = (role: UserRole) => {
