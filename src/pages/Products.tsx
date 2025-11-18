@@ -14,17 +14,29 @@ import { Badge } from '@/components/ui/badge';
 import { Package, Search } from 'lucide-react';
 import { useInventoryItems } from '@/hooks/useInventory';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ProductDetailPanel } from '@/components/ProductDetailPanel';
+import { InventoryItem } from '@/lib/supabase';
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-  const { data: products, isLoading } = useInventoryItems();
+  const { data: products, isLoading, error } = useInventoryItems();
+
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('[Products] Component rendering');
+    console.log('[Products] Data:', products);
+    console.log('[Products] Loading:', isLoading);
+    console.log('[Products] Error:', error);
+  }
 
   const filteredProducts = products?.filter(
     (product) =>
-      product.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      product?.product_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product?.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   return (
     <div className="h-full flex flex-col">
@@ -47,7 +59,15 @@ const Products = () => {
             </div>
           </div>
 
-          {isLoading ? (
+          {error ? (
+            <div className="flex flex-col items-center justify-center py-12 border rounded-lg bg-card border-destructive">
+              <Package className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error loading products</h3>
+              <p className="text-sm text-muted-foreground">
+                {error instanceof Error ? error.message : 'Failed to load products'}
+              </p>
+            </div>
+          ) : isLoading ? (
             <div className="space-y-4">
               {[...Array(10)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
@@ -75,6 +95,10 @@ const Products = () => {
                       <TableRow
                         key={product.id}
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => {
+                          setSelectedItem(product);
+                          setIsPanelOpen(true);
+                        }}
                       >
                         <TableCell className="font-medium">
                           {product.product_name}
@@ -98,7 +122,7 @@ const Products = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          ${product.unit_cost.toFixed(2)}
+                          ${(Number(product.unit_cost) || 0).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
                           {product.safety_stock}
@@ -122,6 +146,15 @@ const Products = () => {
           )}
         </div>
       </div>
+
+      <ProductDetailPanel
+        item={selectedItem}
+        isOpen={isPanelOpen}
+        onClose={() => {
+          setIsPanelOpen(false);
+          setSelectedItem(null);
+        }}
+      />
     </div>
   );
 };

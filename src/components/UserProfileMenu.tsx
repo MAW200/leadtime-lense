@@ -1,16 +1,18 @@
 import { useRole } from '@/contexts/RoleContext';
+import type { UserRole } from '@/lib/supabase';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { User, LogOut, ArrowRightLeft, Settings } from 'lucide-react';
+import { LogOut, ArrowRightLeft, Settings, UserCog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const UserProfileMenu = () => {
@@ -18,8 +20,11 @@ export const UserProfileMenu = () => {
   const navigate = useNavigate();
 
   const isCEOAdmin = actualRole === 'ceo_admin';
-  const isWarehouseAdmin = currentRole === 'warehouse_admin';
-  const isOnsiteTeam = currentRole === 'onsite_team';
+  const roleLabels: Record<UserRole, string> = {
+    ceo_admin: 'CEO/Admin',
+    warehouse_admin: 'Warehouse Admin',
+    onsite_team: 'Onsite Team',
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -30,18 +35,7 @@ export const UserProfileMenu = () => {
       .slice(0, 2);
   };
 
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'ceo_admin':
-        return 'CEO/Admin';
-      case 'warehouse_admin':
-        return 'Warehouse Admin';
-      case 'onsite_team':
-        return 'Onsite Team';
-      default:
-        return 'Admin';
-    }
-  };
+  const getRoleLabel = (role: UserRole) => roleLabels[role] ?? 'Admin';
 
   const handleSwitchToWarehouse = () => {
     setCurrentRole('warehouse_admin');
@@ -79,15 +73,15 @@ export const UserProfileMenu = () => {
             <p className="text-sm font-medium leading-none">Logged in as:</p>
             <p className="text-sm font-semibold">{userName}</p>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Role:</p>
-              <Badge variant="default" className="text-xs">
+              <UserCog className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="outline" className="text-xs">
                 {getRoleLabel(actualRole)}
               </Badge>
             </div>
             {isPreviewMode && (
               <div className="flex items-center gap-2 pt-1">
                 <p className="text-xs text-muted-foreground">Viewing as:</p>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs capitalize">
                   {getRoleLabel(currentRole)}
                 </Badge>
               </div>
@@ -97,13 +91,13 @@ export const UserProfileMenu = () => {
         <DropdownMenuSeparator />
 
         {isPreviewMode ? (
-          <DropdownMenuItem onClick={handleReturnToAdmin} className="cursor-pointer">
+          <DropdownMenuItem onClick={handleReturnToAdmin} className="cursor-pointer text-primary focus:text-primary">
             <ArrowRightLeft className="h-4 w-4 mr-2" />
             Return to Admin View
           </DropdownMenuItem>
         ) : isCEOAdmin ? (
-          <>
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1.5">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5 uppercase tracking-wide">
               View As
             </DropdownMenuLabel>
             <DropdownMenuItem onClick={handleSwitchToWarehouse} className="cursor-pointer">
@@ -114,7 +108,7 @@ export const UserProfileMenu = () => {
               <ArrowRightLeft className="h-4 w-4 mr-2" />
               Switch to Onsite Team View
             </DropdownMenuItem>
-          </>
+          </DropdownMenuGroup>
         ) : null}
 
         <DropdownMenuSeparator />

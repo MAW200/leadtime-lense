@@ -1,56 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, InternalRequest, InternalRequestWithItems, RequestItem } from '@/lib/supabase';
+import { api } from '@/lib/api';
+import type { InternalRequest, InternalRequestWithItems, RequestItem } from '@/lib/supabase';
 
 export const useInternalRequests = (status?: string) => {
   return useQuery({
     queryKey: ['internal-requests', status],
-    queryFn: async () => {
-      let query = supabase
-        .from('internal_requests')
-        .select(`
-          *,
-          request_items(
-            *,
-            product:inventory_items(*)
-          ),
-          project:projects(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (status && status !== 'all') {
-        query = query.eq('status', status);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as InternalRequestWithItems[];
-    },
+    queryFn: () => api.requests.getAll(status),
   });
 };
 
 export const useInternalRequest = (id?: string) => {
   return useQuery({
     queryKey: ['internal-request', id],
-    queryFn: async () => {
-      if (!id) return null;
-
-      const { data, error } = await supabase
-        .from('internal_requests')
-        .select(`
-          *,
-          request_items(
-            *,
-            product:inventory_items(*)
-          ),
-          project:projects(*)
-        `)
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as InternalRequestWithItems | null;
-    },
+    queryFn: () => api.requests.getById(id!),
     enabled: !!id,
   });
 };
@@ -69,39 +31,16 @@ export const useCreateRequest = () => {
       created_by_role?: 'admin' | 'onsite_team';
       items: { product_id: string; quantity_requested: number }[];
     }) => {
-      const { data: requestNumber } = await supabase.rpc('generate_request_number');
-
-      const { data: newRequest, error: requestError } = await supabase
-        .from('internal_requests')
-        .insert({
-          request_number: requestNumber,
-          requester_name: request.requester_name,
-          requester_email: request.requester_email,
-          destination_property: request.destination_property,
-          notes: request.notes,
-          project_id: request.project_id,
-          photo_url: request.photo_url,
-          created_by_role: request.created_by_role || 'admin',
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (requestError) throw requestError;
-
-      const requestItems = request.items.map((item) => ({
-        request_id: newRequest.id,
-        product_id: item.product_id,
-        quantity_requested: item.quantity_requested,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('request_items')
-        .insert(requestItems);
-
-      if (itemsError) throw itemsError;
-
-      return newRequest;
+      return api.requests.create({
+        requester_name: request.requester_name,
+        requester_email: request.requester_email,
+        destination_property: request.destination_property,
+        notes: request.notes,
+        project_id: request.project_id,
+        photo_url: request.photo_url,
+        created_by_role: request.created_by_role,
+        items: request.items,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-requests'] });
@@ -122,18 +61,7 @@ export const useUpdateRequestStatus = () => {
       status: 'pending' | 'fulfilled' | 'cancelled';
       fulfilled_date?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('internal_requests')
-        .update({
-          status,
-          fulfilled_date: status === 'fulfilled' ? fulfilled_date || new Date().toISOString() : null,
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return api.requests.updateStatus(id, status, fulfilled_date);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-requests'] });
@@ -147,12 +75,8 @@ export const useDeleteRequest = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('internal_requests')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      // Note: API doesn't have delete endpoint yet, but keeping structure
+      throw new Error('Delete request not implemented in API');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-requests'] });

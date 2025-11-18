@@ -22,45 +22,179 @@ import WarehouseClaimHistory from "./pages/WarehouseClaimHistory";
 import WarehousePendingReturns from "./pages/WarehousePendingReturns";
 import WarehouseStockAdjustments from "./pages/WarehouseStockAdjustments";
 import NotFound from "./pages/NotFound";
+import { type UserRole } from "./lib/supabase";
 
 const queryClient = new QueryClient();
+
+const HOME_BY_ROLE: Record<UserRole, string> = {
+  ceo_admin: "/",
+  warehouse_admin: "/warehouse/pending-claims",
+  onsite_team: "/onsite/projects",
+};
+
+const guardRoute = (currentRole: UserRole, allowedRoles: UserRole[], element: JSX.Element) => {
+  if (!allowedRoles.includes(currentRole)) {
+    return <Navigate to={HOME_BY_ROLE[currentRole]} replace />;
+  }
+
+  return element;
+};
 
 const AppRoutes = () => {
   const { currentRole } = useRole();
 
-  if (currentRole === 'onsite_team') {
-    return (
-      <Routes>
-        <Route element={<OnsiteLayout><OnsiteMyProjects /></OnsiteLayout>} path="/onsite/projects" />
-        <Route element={<OnsiteLayout><OnsiteProjectBOM /></OnsiteLayout>} path="/onsite/projects/:id" />
-        <Route path="*" element={<Navigate to="/onsite/projects" replace />} />
-      </Routes>
-    );
-  }
-
-  if (currentRole === 'warehouse_admin') {
-    return (
-      <Routes>
-        <Route element={<WarehouseLayout><WarehousePendingClaims /></WarehouseLayout>} path="/warehouse/pending-claims" />
-        <Route element={<WarehouseLayout><WarehousePendingReturns /></WarehouseLayout>} path="/warehouse/pending-returns" />
-        <Route element={<WarehouseLayout><WarehouseStockAdjustments /></WarehouseLayout>} path="/warehouse/stock-adjustments" />
-        <Route element={<WarehouseLayout><WarehouseClaimHistory /></WarehouseLayout>} path="/warehouse/claim-history" />
-        <Route path="*" element={<Navigate to="/warehouse/pending-claims" replace />} />
-      </Routes>
-    );
-  }
-
   return (
     <Routes>
-      <Route element={<MainLayout><Index /></MainLayout>} path="/" />
-      <Route element={<MainLayout><PurchaseOrders /></MainLayout>} path="/purchase-orders" />
-      <Route element={<MainLayout><Products /></MainLayout>} path="/products" />
-      <Route element={<MainLayout><Projects /></MainLayout>} path="/projects" />
-      <Route element={<MainLayout><ProjectDetail /></MainLayout>} path="/projects/:id" />
-      <Route element={<MainLayout><ProjectTemplates /></MainLayout>} path="/project-templates" />
-      <Route element={<MainLayout><AuditLog /></MainLayout>} path="/audit-log" />
-      <Route element={<MainLayout><Settings /></MainLayout>} path="/settings" />
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path="/"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <Index />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/purchase-orders"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <PurchaseOrders />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/products"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <Products />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/projects"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <Projects />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/projects/:id"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <ProjectDetail />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/project-templates"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <ProjectTemplates />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/audit-log"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <AuditLog />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/settings"
+        element={guardRoute(
+          currentRole,
+          ["ceo_admin"],
+          <MainLayout>
+            <Settings />
+          </MainLayout>,
+        )}
+      />
+      <Route
+        path="/onsite/projects"
+        element={guardRoute(
+          currentRole,
+          ["onsite_team"],
+          <OnsiteLayout>
+            <OnsiteMyProjects />
+          </OnsiteLayout>,
+        )}
+      />
+      <Route
+        path="/onsite/projects/:id"
+        element={guardRoute(
+          currentRole,
+          ["onsite_team"],
+          <OnsiteLayout>
+            <OnsiteProjectBOM />
+          </OnsiteLayout>,
+        )}
+      />
+      <Route
+        path="/warehouse/pending-claims"
+        element={guardRoute(
+          currentRole,
+          ["warehouse_admin"],
+          <WarehouseLayout>
+            <WarehousePendingClaims />
+          </WarehouseLayout>,
+        )}
+      />
+      <Route
+        path="/warehouse/pending-returns"
+        element={guardRoute(
+          currentRole,
+          ["warehouse_admin"],
+          <WarehouseLayout>
+            <WarehousePendingReturns />
+          </WarehouseLayout>,
+        )}
+      />
+      <Route
+        path="/warehouse/stock-adjustments"
+        element={guardRoute(
+          currentRole,
+          ["warehouse_admin"],
+          <WarehouseLayout>
+            <WarehouseStockAdjustments />
+          </WarehouseLayout>,
+        )}
+      />
+      <Route
+        path="/warehouse/claim-history"
+        element={guardRoute(
+          currentRole,
+          ["warehouse_admin"],
+          <WarehouseLayout>
+            <WarehouseClaimHistory />
+          </WarehouseLayout>,
+        )}
+      />
+      <Route
+        path="*"
+        element={
+          currentRole === "ceo_admin" ? (
+            <NotFound />
+          ) : (
+            <Navigate to={HOME_BY_ROLE[currentRole]} replace />
+          )
+        }
+      />
     </Routes>
   );
 };

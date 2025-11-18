@@ -15,9 +15,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Package, AlertCircle, MapPin, FileText, Calendar, Image } from 'lucide-react';
 import { useProject } from '@/hooks/useProjects';
-import { useProjectStats } from '@/hooks/useProjectStats';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { useProjectStats, useProjectRequestItems, type ProjectRequestItem } from '@/hooks/useProjectStats';
 import { format } from 'date-fns';
 
 const ProjectDetail = () => {
@@ -25,39 +23,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const { data: project, isLoading: projectLoading } = useProject(id);
   const { data: projectStats } = useProjectStats(id);
-  
-  // Get claim items for this project
-  const { data: claimItems, isLoading: claimItemsLoading } = useQuery({
-    queryKey: ['project-claim-items', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase
-        .from('claim_items')
-        .select(`
-          id,
-          quantity_requested,
-          quantity_approved,
-          created_at,
-          product:inventory_items(
-            product_name,
-            sku
-          ),
-          claim:claims!inner(
-            id,
-            claim_number,
-            onsite_user_name,
-            status,
-            created_at,
-            photo_url
-          )
-        `)
-        .eq('claim.project_id', id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const { data: requestItems, isLoading: requestItemsLoading } = useProjectRequestItems(id);
 
   const stats = projectStats?.[0];
 
@@ -231,7 +197,7 @@ const ProjectDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {requestItems.map((item: any) => (
+                        {requestItems.map((item: ProjectRequestItem) => (
                           <TableRow key={item.id}>
                             <TableCell className="font-medium">
                               {item.product?.product_name || '-'}
