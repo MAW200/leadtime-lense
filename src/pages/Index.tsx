@@ -23,7 +23,7 @@ const Index = () => {
     return Math.round(projectedStock / dailyConsumption);
   };
 
-  const totalInventoryValue = inventoryData?.reduce((sum, item) => sum + (item.in_stock * item.unit_cost), 0) || 0;
+  const totalInventoryValue = inventoryData?.reduce((sum, item) => sum + (item.in_stock * (Number(item.unit_cost) || 0)), 0) || 0;
   const totalStockAvailable = inventoryData?.reduce((sum, item) => sum + item.in_stock, 0) || 0;
   const activeOrders = inventoryData?.filter(item =>
     (item.on_order_local_14d + item.on_order_shipment_a_60d + item.on_order_shipment_b_60d) > 0

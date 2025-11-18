@@ -25,28 +25,52 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ClipboardList, Download, Eye, Filter } from 'lucide-react';
+import { ClipboardList, Download, Eye } from 'lucide-react';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { AuditLog as AuditLogType } from '@/lib/supabase';
 
+const ACTION_OPTIONS = [
+  { value: 'all', label: 'All Actions' },
+  { value: 'PO_CREATED', label: 'PO Created' },
+  { value: 'PO_STATUS_CHANGED', label: 'PO Status Changed' },
+  { value: 'PO_QA_COMPLETED', label: 'PO QA Completed' },
+  { value: 'REQUEST_CREATED', label: 'Request Created' },
+  { value: 'REQUEST_STATUS_CHANGED', label: 'Request Status Changed' },
+  { value: 'claim_initiated', label: 'Claim Initiated' },
+  { value: 'emergency_claim_initiated', label: 'Emergency Claim Initiated' },
+  { value: 'claim_approved', label: 'Claim Approved' },
+  { value: 'claim_partially_approved', label: 'Claim Partially Approved' },
+  { value: 'claim_denied', label: 'Claim Denied' },
+  { value: 'return_submitted', label: 'Return Submitted' },
+  { value: 'return_approved', label: 'Return Approved' },
+  { value: 'stock_adjustment_recorded', label: 'Stock Adjustment' },
+] as const;
+
 const AuditLog = () => {
-  const [actionTypeFilter, setActionTypeFilter] = useState('all');
+  const [actionTypeFilter, setActionTypeFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedLog, setSelectedLog] = useState<AuditLogType | null>(null);
 
   const { data: logs, isLoading } = useAuditLogs({
-    actionType: actionTypeFilter
+    actionType: actionTypeFilter,
+    userName: userFilter || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
   });
 
   const getRoleBadge = (role: string) => {
-    const roleConfig = {
-      admin: { label: 'Admin', className: 'bg-blue-500 text-white' },
+    const roleConfig: Record<string, { label: string; className: string }> = {
+      ceo_admin: { label: 'CEO/Admin', className: 'bg-indigo-500 text-white' },
+      warehouse_admin: { label: 'Warehouse Admin', className: 'bg-blue-600 text-white' },
       onsite_team: { label: 'Onsite Team', className: 'bg-orange-500 text-white' },
       system: { label: 'System', className: 'bg-gray-500 text-white' },
     };
 
-    const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.system;
+    const config = roleConfig[role] || roleConfig.system;
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
@@ -54,9 +78,17 @@ const AuditLog = () => {
     const actionConfig: Record<string, { label: string; className: string }> = {
       PO_CREATED: { label: 'PO Created', className: 'bg-green-100 text-green-800' },
       PO_STATUS_CHANGED: { label: 'PO Status Changed', className: 'bg-blue-100 text-blue-800' },
-      PO_QA_COMPLETED: { label: 'QA Completed', className: 'bg-purple-100 text-purple-800' },
+      PO_QA_COMPLETED: { label: 'PO QA Completed', className: 'bg-purple-100 text-purple-800' },
       REQUEST_CREATED: { label: 'Request Created', className: 'bg-green-100 text-green-800' },
       REQUEST_STATUS_CHANGED: { label: 'Request Status Changed', className: 'bg-blue-100 text-blue-800' },
+      claim_initiated: { label: 'Claim Initiated', className: 'bg-amber-100 text-amber-700' },
+      emergency_claim_initiated: { label: 'Emergency Claim', className: 'bg-red-100 text-red-700' },
+      claim_approved: { label: 'Claim Approved', className: 'bg-emerald-100 text-emerald-700' },
+      claim_partially_approved: { label: 'Claim Partial Approval', className: 'bg-sky-100 text-sky-700' },
+      claim_denied: { label: 'Claim Denied', className: 'bg-rose-100 text-rose-700' },
+      return_submitted: { label: 'Return Submitted', className: 'bg-purple-100 text-purple-700' },
+      return_approved: { label: 'Return Approved', className: 'bg-lime-100 text-lime-700' },
+      stock_adjustment_recorded: { label: 'Stock Adjustment', className: 'bg-slate-100 text-slate-700' },
     };
 
     const config = actionConfig[actionType] || { label: actionType, className: 'bg-gray-100 text-gray-800' };
@@ -104,22 +136,48 @@ const AuditLog = () => {
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="w-64">
-              <Label htmlFor="actionType" className="text-xs mb-2 block">Filter by Action Type</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_240px_220px_220px] gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="actionType" className="text-xs">Filter by Action Type</Label>
               <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
                 <SelectTrigger id="actionType">
-                  <SelectValue />
+                  <SelectValue placeholder="Select action" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Actions</SelectItem>
-                  <SelectItem value="PO_CREATED">PO Created</SelectItem>
-                  <SelectItem value="PO_STATUS_CHANGED">PO Status Changed</SelectItem>
-                  <SelectItem value="PO_QA_COMPLETED">QA Completed</SelectItem>
-                  <SelectItem value="REQUEST_CREATED">Request Created</SelectItem>
-                  <SelectItem value="REQUEST_STATUS_CHANGED">Request Status Changed</SelectItem>
+                <SelectContent className="max-h-64">
+                  {ACTION_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="userFilter" className="text-xs">User</Label>
+              <Input
+                id="userFilter"
+                placeholder="Search by user name"
+                value={userFilter}
+                onChange={(event) => setUserFilter(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="startDate" className="text-xs">Start Date</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate" className="text-xs">End Date</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
             </div>
           </div>
 
@@ -178,7 +236,7 @@ const AuditLog = () => {
               <p className="text-sm text-muted-foreground">
                 {actionTypeFilter === 'all'
                   ? 'Audit logs will appear here as actions are performed'
-                  : `No ${actionTypeFilter.toLowerCase().replace('_', ' ')} actions recorded`}
+                  : `No ${actionTypeFilter.toLowerCase().replace(/_/g, ' ')} actions recorded`}
               </p>
             </div>
           )}

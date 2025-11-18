@@ -228,7 +228,10 @@ const Projects = () => {
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={(value: any) => setStatus(value)}>
+              <Select
+                value={status}
+                onValueChange={(value) => setStatus(value as 'active' | 'on_hold' | 'completed')}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

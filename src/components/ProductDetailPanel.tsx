@@ -71,11 +71,27 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
           vendorId: primaryVendor.vendor_id,
           productId: item.id,
           quantity: recommendedOrder,
-          unitPrice: primaryVendor.unit_price,
+          unitPrice: Number(primaryVendor.unit_price) || 0,
         },
       },
     });
     onClose();
+  };
+
+  // Handle both nested and flat vendor structures
+  const getVendorName = () => {
+    if (!primaryVendor) return null;
+    return primaryVendor.vendor?.name || primaryVendor.vendor_name || 'Unknown Vendor';
+  };
+
+  const getVendorEmail = () => {
+    if (!primaryVendor) return null;
+    return primaryVendor.vendor?.contact_email || primaryVendor.contact_email || null;
+  };
+
+  const getVendorCountry = () => {
+    if (!primaryVendor) return null;
+    return primaryVendor.vendor?.country || primaryVendor.country || 'N/A';
   };
 
   return (
@@ -158,14 +174,14 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-bold">{primaryVendor.vendor?.name}</p>
+                      <p className="text-lg font-bold">{getVendorName()}</p>
                       {primaryVendor.is_primary && (
                         <Badge variant="secondary" className="text-xs">Primary</Badge>
                       )}
                     </div>
-                    {primaryVendor.vendor?.contact_email && (
+                    {getVendorEmail() && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        {primaryVendor.vendor.contact_email}
+                        {getVendorEmail()}
                       </p>
                     )}
                   </div>
@@ -173,19 +189,19 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="bg-muted/50 rounded p-2">
                     <span className="text-xs text-muted-foreground">Unit Price</span>
-                    <p className="text-lg font-bold">${primaryVendor.unit_price.toFixed(2)}</p>
+                    <p className="text-lg font-bold">${(Number(primaryVendor.unit_price) || 0).toFixed(2)}</p>
                   </div>
                   <div className="bg-muted/50 rounded p-2">
                     <span className="text-xs text-muted-foreground">Lead Time</span>
-                    <p className="text-lg font-bold">{primaryVendor.lead_time_days} days</p>
+                    <p className="text-lg font-bold">{primaryVendor.lead_time_days || 0} days</p>
                   </div>
                   <div className="bg-muted/50 rounded p-2">
                     <span className="text-xs text-muted-foreground">Min Order</span>
-                    <p className="text-lg font-bold">{primaryVendor.minimum_order_qty} units</p>
+                    <p className="text-lg font-bold">{primaryVendor.minimum_order_qty || 0} units</p>
                   </div>
                   <div className="bg-muted/50 rounded p-2">
                     <span className="text-xs text-muted-foreground">Country</span>
-                    <p className="text-lg font-bold">{primaryVendor.vendor?.country}</p>
+                    <p className="text-lg font-bold">{getVendorCountry()}</p>
                   </div>
                 </div>
                 {primaryVendor.vendor_sku && (

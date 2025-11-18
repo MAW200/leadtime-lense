@@ -13,16 +13,20 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { History } from 'lucide-react';
 import { useClaims } from '@/hooks/useClaims';
+import type { ClaimWithItems } from '@/lib/supabase';
 import { format } from 'date-fns';
 
 const WarehouseClaimHistory = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const { data: claims, isLoading } = useClaims(statusFilter);
+  const { data: claims, isLoading } = useClaims({
+    status: statusFilter === 'all' ? undefined : statusFilter,
+  });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: ClaimWithItems['status']) => {
     const statusConfig = {
       pending: { label: 'Pending', className: 'bg-yellow-500 text-white hover:bg-yellow-600' },
       approved: { label: 'Approved', className: 'bg-green-500 text-white hover:bg-green-600' },
+      partial_approved: { label: 'Partial', className: 'bg-blue-500 text-white hover:bg-blue-600' },
       denied: { label: 'Denied', className: 'bg-red-500 text-white hover:bg-red-600' },
     };
 
@@ -30,7 +34,7 @@ const WarehouseClaimHistory = () => {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const getItemsSummary = (claim: any) => {
+  const getItemsSummary = (claim: ClaimWithItems) => {
     if (!claim.claim_items || claim.claim_items.length === 0) {
       return 'No items';
     }
@@ -39,8 +43,8 @@ const WarehouseClaimHistory = () => {
     const remaining = claim.claim_items.length - 1;
 
     return remaining > 0
-      ? `${firstItem.quantity} × ${firstItem.product?.product_name} +${remaining} more`
-      : `${firstItem.quantity} × ${firstItem.product?.product_name}`;
+      ? `${firstItem.quantity_requested} × ${firstItem.product?.product_name} +${remaining} more`
+      : `${firstItem.quantity_requested} × ${firstItem.product?.product_name}`;
   };
 
   return (

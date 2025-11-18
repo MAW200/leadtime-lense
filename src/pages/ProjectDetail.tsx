@@ -15,7 +15,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Package, AlertCircle, MapPin, FileText, Calendar, Image } from 'lucide-react';
 import { useProject } from '@/hooks/useProjects';
-import { useProjectStats, useProjectRequestItems } from '@/hooks/useProjectStats';
+import { useProjectStats, useProjectRequestItems, type ProjectRequestItem } from '@/hooks/useProjectStats';
 import { format } from 'date-fns';
 
 const ProjectDetail = () => {
@@ -197,7 +197,7 @@ const ProjectDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {requestItems.map((item: any) => (
+                        {requestItems.map((item: ProjectRequestItem) => (
                           <TableRow key={item.id}>
                             <TableCell className="font-medium">
                               {item.product?.product_name || '-'}

@@ -1,42 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import type { Notification } from '@/lib/supabase';
+import { useRole } from '@/contexts/RoleContext';
 
 export const useNotifications = (userId?: string) => {
+  const { currentRole } = useRole();
+  
   return useQuery({
     queryKey: ['notifications', userId],
     enabled: !!userId,
-    queryFn: async () => {
-      if (!userId) return [];
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_user_id', userId)
-        .order('created_at', { ascending: false})
-        .limit(50);
-
-      if (error) throw error;
-      return data as Notification[];
-    },
+    refetchInterval: 30000,
+    queryFn: () => api.notifications.getAll(userId, currentRole),
   });
 };
 
 export const useUnreadNotificationsCount = (userId?: string) => {
+  const { currentRole } = useRole();
+  
   return useQuery({
     queryKey: ['notifications', 'unread', userId],
     enabled: !!userId,
+    refetchInterval: 30000,
     queryFn: async () => {
-      if (!userId) return 0;
-
-      const { count, error } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_user_id', userId)
-        .eq('is_read', false);
-
-      if (error) throw error;
-      return count || 0;
+      const result = await api.notifications.getUnreadCount(userId, currentRole);
+      return result.count || 0;
     },
   });
 };
@@ -46,12 +33,7 @@ export const useMarkNotificationAsRead = () => {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      return api.notifications.markAsRead(notificationId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -61,16 +43,11 @@ export const useMarkNotificationAsRead = () => {
 
 export const useMarkAllNotificationsAsRead = () => {
   const queryClient = useQueryClient();
+  const { currentRole } = useRole();
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('recipient_user_id', userId)
-        .eq('is_read', false);
-
-      if (error) throw error;
+      return api.notifications.markAllAsRead(userId, currentRole);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });

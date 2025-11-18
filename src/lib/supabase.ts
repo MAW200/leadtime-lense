@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+// This file now only contains TypeScript types
+// The Supabase client has been removed in favor of MySQL backend API
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const USER_ROLES = ['ceo_admin', 'warehouse_admin', 'onsite_team'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
 
 export type InventoryItem = {
   id: string;
@@ -142,7 +137,7 @@ export type AuditLog = {
   related_entity_type: string | null;
   related_entity_id: string | null;
   photo_url: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 };
 
@@ -150,13 +145,11 @@ export type UserProfile = {
   id: string;
   name: string;
   email: string | null;
-  role: 'ceo_admin' | 'warehouse_admin' | 'onsite_team';
+  role: UserRole;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 };
-
-export type UserRole = 'ceo_admin' | 'warehouse_admin' | 'onsite_team';
 
 export type ProjectMaterial = {
   id: string;
