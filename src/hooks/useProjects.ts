@@ -1,42 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, Project } from '@/lib/supabase';
+import { api } from '@/lib/api';
+import type { Project } from '@/lib/supabase';
 
 export const useProjects = (statusFilter?: string) => {
   return useQuery({
     queryKey: ['projects', statusFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as Project[];
-    },
+    queryFn: () => api.projects.getAll(statusFilter),
   });
 };
 
 export const useProject = (id?: string) => {
   return useQuery({
     queryKey: ['project', id],
-    queryFn: async () => {
-      if (!id) return null;
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as Project | null;
-    },
+    queryFn: () => api.projects.getById(id!),
     enabled: !!id,
   });
 };
@@ -51,19 +27,12 @@ export const useCreateProject = () => {
       status?: 'active' | 'completed' | 'on_hold';
       description?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          name: project.name,
-          location: project.location,
-          status: project.status || 'active',
-          description: project.description,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return api.projects.create({
+        name: project.name,
+        location: project.location,
+        status: project.status || 'active',
+        description: project.description,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -85,15 +54,7 @@ export const useUpdateProject = () => {
       status?: 'active' | 'completed' | 'on_hold';
       description?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('projects')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return api.projects.update(id, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -107,9 +68,7 @@ export const useDeleteProject = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('projects').delete().eq('id', id);
-
-      if (error) throw error;
+      return api.projects.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });

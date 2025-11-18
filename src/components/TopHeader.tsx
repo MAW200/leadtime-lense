@@ -1,4 +1,5 @@
 import { UserProfileMenu } from './UserProfileMenu';
+import { NotificationBell } from './NotificationBell';
 
 interface TopHeaderProps {
   title?: string;
@@ -21,6 +22,7 @@ export const TopHeader = ({ title, description, actions }: TopHeaderProps) => {
           )}
           <div className="flex items-center gap-4 ml-auto">
             {actions}
+            <NotificationBell />
             <UserProfileMenu />
           </div>
         </div>

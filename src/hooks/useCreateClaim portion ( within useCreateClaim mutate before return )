@@ -1,0 +1,40 @@
+      const notificationPayload: Array<{
+        recipient_user_id: string;
+        recipient_role: 'ceo_admin' | 'warehouse_admin' | 'onsite_team';
+        message: string;
+        notification_type: string;
+        related_claim_id: string;
+        is_read: boolean;
+      }> = [
+        {
+          recipient_user_id: params.onsiteUserId,
+          recipient_role: 'onsite_team',
+          message: `Claim ${claimNumber} submitted and awaiting review.`,
+          notification_type: params.claimType === 'emergency' ? 'emergency_claim_submitted' : 'claim_submitted',
+          related_claim_id: claim.id,
+          is_read: false,
+        },
+      ];
+
+      if (params.claimType === 'emergency') {
+        notificationPayload.push({
+          recipient_user_id: 'ceo_admin',
+          recipient_role: 'ceo_admin',
+          message: `Emergency claim ${claimNumber} requires immediate attention.`,
+          notification_type: 'emergency_claim_alert',
+          related_claim_id: claim.id,
+          is_read: false,
+        });
+      } else {
+        notificationPayload.push({
+          recipient_user_id: 'warehouse_admin',
+          recipient_role: 'warehouse_admin',
+          message: `New claim ${claimNumber} submitted by ${params.onsiteUserName}.`,
+          notification_type: 'claim_pending_review',
+          related_claim_id: claim.id,
+          is_read: false,
+        });
+      }
+
+      await supabase.from('notifications').insert(notificationPayload);
+
