@@ -18,10 +18,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PurchaseOrderWithItems } from '@/lib/supabase';
-import { PhotoUpload } from './PhotoUpload';
+import { PhotoUpload } from '@/components/shared/PhotoUpload';
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from './ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRole } from '@/contexts/RoleContext';
 
 interface QAReceivingModalProps {

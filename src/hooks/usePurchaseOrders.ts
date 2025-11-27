@@ -68,11 +68,11 @@ export const useUpdatePurchaseOrderStatus = () => {
       status,
     }: {
       id: string;
-      status: 'draft' | 'sent' | 'in_transit' | 'received' | 'cancelled';
+      status: 'draft' | 'ordered' | 'partial' | 'received' | 'cancelled';
     }) => {
       const updates: Record<string, string> = { status };
 
-      if (status === 'sent' && !updates.order_date) {
+      if (status === 'ordered' && !updates.order_date) {
         updates.order_date = new Date().toISOString();
       }
 

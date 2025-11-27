@@ -27,15 +27,15 @@ export const useCreateTemplate = () => {
       const template = await api.projectTemplates.create({
         name: payload.name,
         description: payload.description,
-        isActive: payload.is_active,
+        is_active: payload.is_active,
       });
 
       if (payload.items && payload.items.length > 0) {
         for (const item of payload.items) {
           await api.projectTemplates.addItem(template.id, {
-            productId: item.product_id,
+            product_id: item.product_id,
             phase: item.phase,
-            requiredQuantity: item.required_quantity,
+            required_quantity: item.required_quantity,
           });
         }
       }
@@ -56,7 +56,7 @@ export const useUpdateTemplate = () => {
       return api.projectTemplates.update(id, {
         name: updates.name,
         description: updates.description,
-        isActive: updates.is_active,
+        is_active: updates.is_active,
       });
     },
     onSuccess: (_data, variables) => {
@@ -88,15 +88,15 @@ export const useDuplicateTemplate = () => {
       const newTemplate = await api.projectTemplates.create({
         name: `${template.name} Copy`,
         description: template.description,
-        isActive: template.is_active,
+        is_active: template.is_active,
       });
 
       if (template.project_template_items && template.project_template_items.length > 0) {
         for (const item of template.project_template_items) {
           await api.projectTemplates.addItem(newTemplate.id, {
-            productId: item.product_id,
+            product_id: item.product_id,
             phase: item.phase,
-            requiredQuantity: item.required_quantity,
+            required_quantity: item.required_quantity,
           });
         }
       }
@@ -127,9 +127,9 @@ export const useCreateTemplateItem = () => {
   return useMutation({
     mutationFn: async (payload: { template_id: string; product_id: string; phase: ProjectTemplateItem['phase']; required_quantity: number }) => {
       return api.projectTemplates.addItem(payload.template_id, {
-        productId: payload.product_id,
+        product_id: payload.product_id,
         phase: payload.phase,
-        requiredQuantity: payload.required_quantity,
+        required_quantity: payload.required_quantity,
       });
     },
     onSuccess: (_data, variables) => {
@@ -146,7 +146,7 @@ export const useUpdateTemplateItem = () => {
   return useMutation({
     mutationFn: async ({ id, template_id, ...updates }: { id: string; template_id: string; required_quantity: number; phase: ProjectTemplateItem['phase'] }) => {
       return api.projectTemplates.updateItem(template_id, id, {
-        requiredQuantity: updates.required_quantity,
+        required_quantity: updates.required_quantity,
         phase: updates.phase,
       });
     },

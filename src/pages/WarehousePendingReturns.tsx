@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { PackageX, RefreshCcw, User } from 'lucide-react';
-import { TopHeader } from '@/components/TopHeader';
+import { TopHeader } from '@/components/navigation/TopHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

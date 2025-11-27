@@ -1,8 +1,8 @@
 import { useRole } from '@/contexts/RoleContext';
-import type { UserRole } from '@/lib/supabase';
-import { Button } from './ui/button';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import { Badge } from './ui/badge';
+import { ROLE_PERMISSIONS, type UserRole } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,20 +11,60 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import { LogOut, ArrowRightLeft, Settings, UserCog } from 'lucide-react';
+} from '@/components/ui/dropdown-menu';
+import { 
+  LogOut, 
+  ArrowRightLeft, 
+  Settings, 
+  UserCog,
+  Shield,
+  ShoppingCart,
+  Wallet,
+  Warehouse,
+  HardHat,
+  Check,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const UserProfileMenu = () => {
-  const { currentRole, actualRole, setCurrentRole, isPreviewMode, exitPreviewMode, userName } = useRole();
-  const navigate = useNavigate();
+// Role icons mapping
+const roleIcons: Record<UserRole, React.ComponentType<{ className?: string }>> = {
+  ceo_admin: Shield,
+  purchaser: ShoppingCart,
+  finance_admin: Wallet,
+  warehouse_admin: Warehouse,
+  onsite_team: HardHat,
+};
 
-  const isCEOAdmin = actualRole === 'ceo_admin';
-  const roleLabels: Record<UserRole, string> = {
-    ceo_admin: 'CEO/Admin',
-    warehouse_admin: 'Warehouse Admin',
-    onsite_team: 'Onsite Team',
-  };
+// Role colors for badges
+const roleColors: Record<UserRole, string> = {
+  ceo_admin: 'bg-purple-600 text-white',
+  purchaser: 'bg-blue-600 text-white',
+  finance_admin: 'bg-green-600 text-white',
+  warehouse_admin: 'bg-amber-600 text-white',
+  onsite_team: 'bg-orange-600 text-white',
+};
+
+// Default routes for each role
+const roleDefaultRoutes: Record<UserRole, string> = {
+  ceo_admin: '/',
+  purchaser: '/purchase-orders',
+  finance_admin: '/purchase-orders',
+  warehouse_admin: '/warehouse/pending-claims',
+  onsite_team: '/onsite/projects',
+};
+
+export const UserProfileMenu = () => {
+  const {
+    currentRole,
+    actualRole,
+    setCurrentRole,
+    isPreviewMode,
+    exitPreviewMode,
+    userName,
+    userId,
+    isAdmin,
+  } = useRole();
+  const navigate = useNavigate();
 
   const getInitials = (name: string) => {
     return name
@@ -35,16 +75,12 @@ export const UserProfileMenu = () => {
       .slice(0, 2);
   };
 
-  const getRoleLabel = (role: UserRole) => roleLabels[role] ?? 'Admin';
+  const getRoleLabel = (role: UserRole) => ROLE_PERMISSIONS[role]?.label ?? 'User';
+  const CurrentRoleIcon = roleIcons[currentRole];
 
-  const handleSwitchToWarehouse = () => {
-    setCurrentRole('warehouse_admin');
-    navigate('/warehouse/pending-claims');
-  };
-
-  const handleSwitchToOnsite = () => {
-    setCurrentRole('onsite_team');
-    navigate('/onsite/projects');
+  const handleSwitchRole = (role: UserRole) => {
+    setCurrentRole(role);
+    navigate(roleDefaultRoutes[role]);
   };
 
   const handleReturnToAdmin = () => {
@@ -53,8 +89,14 @@ export const UserProfileMenu = () => {
   };
 
   const handleLogout = () => {
-    console.log('Logout clicked');
+    // Implement logout logic
+    navigate('/login');
   };
+
+  // All available roles for switching (only admins can switch to any role)
+  const switchableRoles: UserRole[] = isAdmin 
+    ? ['ceo_admin', 'purchaser', 'finance_admin', 'warehouse_admin', 'onsite_team']
+    : [actualRole];
 
   return (
     <DropdownMenu>
@@ -67,11 +109,12 @@ export const UserProfileMenu = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
+      <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-2">
             <p className="text-sm font-medium leading-none">Logged in as:</p>
             <p className="text-sm font-semibold">{userName}</p>
+            <p className="text-xs font-mono text-muted-foreground break-all">ID: {userId}</p>
             <div className="flex items-center gap-2">
               <UserCog className="h-4 w-4 text-muted-foreground" />
               <Badge variant="outline" className="text-xs">
@@ -81,39 +124,67 @@ export const UserProfileMenu = () => {
             {isPreviewMode && (
               <div className="flex items-center gap-2 pt-1">
                 <p className="text-xs text-muted-foreground">Viewing as:</p>
-                <Badge variant="secondary" className="text-xs capitalize">
+                <Badge className={`text-xs ${roleColors[currentRole]}`}>
+                  <CurrentRoleIcon className="h-3 w-3 mr-1" />
                   {getRoleLabel(currentRole)}
                 </Badge>
               </div>
             )}
           </div>
         </DropdownMenuLabel>
+        
         <DropdownMenuSeparator />
-
+        
+        <DropdownMenuItem onClick={() => navigate('/login')} className="cursor-pointer">
+          <ArrowRightLeft className="h-4 w-4 mr-2" />
+          Switch Identity
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         {isPreviewMode ? (
-          <DropdownMenuItem onClick={handleReturnToAdmin} className="cursor-pointer text-primary focus:text-primary">
+          <DropdownMenuItem 
+            onClick={handleReturnToAdmin} 
+            className="cursor-pointer text-primary focus:text-primary"
+          >
             <ArrowRightLeft className="h-4 w-4 mr-2" />
             Return to Admin View
           </DropdownMenuItem>
-        ) : isCEOAdmin ? (
+        ) : isAdmin ? (
           <DropdownMenuGroup>
             <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5 uppercase tracking-wide">
-              View As
+              Switch View
             </DropdownMenuLabel>
-            <DropdownMenuItem onClick={handleSwitchToWarehouse} className="cursor-pointer">
-              <ArrowRightLeft className="h-4 w-4 mr-2" />
-              Switch to Warehouse Admin View
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSwitchToOnsite} className="cursor-pointer">
-              <ArrowRightLeft className="h-4 w-4 mr-2" />
-              Switch to Onsite Team View
-            </DropdownMenuItem>
+            {switchableRoles.map((role) => {
+              const RoleIcon = roleIcons[role];
+              const isSelected = currentRole === role;
+              const roleInfo = ROLE_PERMISSIONS[role];
+              
+              return (
+                <DropdownMenuItem 
+                  key={role}
+                  onClick={() => handleSwitchRole(role)} 
+                  className="cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <div className={`p-1.5 rounded ${roleColors[role]}`}>
+                      <RoleIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{roleInfo.label}</p>
+                      <p className="text-xs text-muted-foreground">{roleInfo.description}</p>
+                    </div>
+                    {isSelected && <Check className="h-4 w-4 text-green-600" />}
+                  </div>
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuGroup>
         ) : null}
 
         <DropdownMenuSeparator />
 
-        {(isCEOAdmin && !isPreviewMode) && (
+        {(isAdmin && !isPreviewMode) && (
           <>
             <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
               <Settings className="h-4 w-4 mr-2" />
@@ -122,7 +193,11 @@ export const UserProfileMenu = () => {
             <DropdownMenuSeparator />
           </>
         )}
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+        
+        <DropdownMenuItem 
+          onClick={handleLogout} 
+          className="cursor-pointer text-destructive focus:text-destructive"
+        >
           <LogOut className="h-4 w-4 mr-2" />
           Logout
         </DropdownMenuItem>

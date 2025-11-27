@@ -178,14 +178,14 @@ export const NewPOModal = ({ isOpen, onClose, preFillData }: NewPOModalProps) =>
               <SelectContent>
                 {vendors?.map((vendor) => (
                   <SelectItem key={vendor.id} value={vendor.id}>
-                    {vendor.name} ({vendor.country})
+                    {vendor.name} ({vendor.currency || 'USD'})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {selectedVendor && (
               <div className="text-xs text-muted-foreground mt-2">
-                Lead Time: {selectedVendor.lead_time_days} days
+                Payment Terms: {selectedVendor.payment_terms || 'Net30'}
                 {selectedVendor.contact_email && ` • ${selectedVendor.contact_email}`}
               </div>
             )}

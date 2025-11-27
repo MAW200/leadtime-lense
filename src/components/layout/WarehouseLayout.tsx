@@ -1,11 +1,15 @@
-import { WarehouseSidebar } from './WarehouseSidebar';
+import { Outlet } from 'react-router-dom';
+import { WarehouseSidebar } from '../navigation/WarehouseSidebar';
 
-export const WarehouseLayout = ({ children }: { children: React.ReactNode }) => {
+export const WarehouseLayout = () => {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="min-h-screen bg-background">
+      {/* macOS Dynamic Island Navigation */}
       <WarehouseSidebar />
-      <main className="flex-1 overflow-y-auto">
-        {children}
+
+      {/* Main Content Area */}
+      <main className="container mx-auto px-4 pb-8">
+        <Outlet />
       </main>
     </div>
   );

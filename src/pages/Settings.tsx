@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { TopHeader } from '@/components/TopHeader';
+import { TopHeader } from '@/components/navigation/TopHeader';
 import { Settings as SettingsIcon, Bell, Database, Users } from 'lucide-react';
 
 const Settings = () => {

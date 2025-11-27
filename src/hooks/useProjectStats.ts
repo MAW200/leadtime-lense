@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import type { InternalRequest, Project } from '@/lib/supabase';
 
 export interface ProjectStats {
   project_id: string;
@@ -14,18 +15,19 @@ export const useProjectStats = (projectId?: string) => {
       // Note: This is a complex query that may need backend support
       // For now, we'll fetch requests and calculate stats
       const requests = await api.requests.getAll();
-      const filteredRequests = projectId 
-        ? requests.filter((r: any) => r.project_id === projectId)
+      const filteredRequests = projectId
+        ? requests.filter((r: InternalRequest) => r.project_id === projectId)
         : requests;
 
       if (!projectId) {
         const projects = await api.projects.getAll();
-        return projects.map((project: any) => {
-          const projectRequests = requests.filter((r: any) => r.project_id === project.id);
+        return projects.map((project: Project) => {
+          const projectRequests = requests.filter((r: InternalRequest) => r.project_id === project.id);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const totalProducts = projectRequests.reduce((sum: number, req: any) => {
             return sum + (req.request_items?.length || 0);
           }, 0);
-          const pendingRequests = projectRequests.filter((r: any) => r.status === 'pending').length;
+          const pendingRequests = projectRequests.filter((r: InternalRequest) => r.status === 'pending').length;
 
           return {
             project_id: project.id,
@@ -35,10 +37,11 @@ export const useProjectStats = (projectId?: string) => {
         });
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const totalProducts = filteredRequests.reduce((sum: number, req: any) => {
         return sum + (req.request_items?.length || 0);
       }, 0);
-      const pendingRequests = filteredRequests.filter((r: any) => r.status === 'pending').length;
+      const pendingRequests = filteredRequests.filter((r: InternalRequest) => r.status === 'pending').length;
 
       return [{
         project_id: projectId,
@@ -73,10 +76,10 @@ export const useProjectRequestItems = (projectId?: string) => {
     queryKey: ['project-request-items', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-      
+
       const requests = await api.requests.getAll();
-      const projectRequests = requests.filter((r: any) => r.project_id === projectId);
-      
+      const projectRequests = requests.filter((r: InternalRequest) => r.project_id === projectId);
+
       const items: ProjectRequestItem[] = [];
       for (const req of projectRequests) {
         if (req.request_items) {
@@ -99,7 +102,7 @@ export const useProjectRequestItems = (projectId?: string) => {
           }
         }
       }
-      
+
       return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
     enabled: !!projectId,

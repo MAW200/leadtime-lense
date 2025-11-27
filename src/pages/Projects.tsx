@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TopHeader } from '@/components/TopHeader';
+import { TopHeader } from '@/components/navigation/TopHeader';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, FolderKanban, Package, AlertCircle } from 'lucide-react';
 import { useProjects, useCreateProject } from '@/hooks/useProjects';
 import { useProjectStats } from '@/hooks/useProjectStats';
+import { useRole } from '@/contexts/RoleContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -38,7 +39,13 @@ const Projects = () => {
   const [description, setDescription] = useState('');
 
   const navigate = useNavigate();
-  const { data: projects, isLoading } = useProjects(statusFilter);
+  const { currentRole } = useRole();
+
+  // Simulate logged-in user ID for onsite team
+  // In a real app, this would come from the auth context
+  const userId = currentRole === 'onsite_team' ? 'u3' : undefined;
+
+  const { data: projects, isLoading } = useProjects(statusFilter, userId);
   const { data: projectStats } = useProjectStats();
   const createProject = useCreateProject();
 

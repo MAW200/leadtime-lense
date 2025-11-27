@@ -1,12 +1,83 @@
-// This file now only contains TypeScript types
-// The Supabase client has been removed in favor of MySQL backend API
+import { createClient } from '@supabase/supabase-js';
 
-export const USER_ROLES = ['ceo_admin', 'warehouse_admin', 'onsite_team'] as const;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Missing Supabase environment variables. Please check your .env file.');
+}
+
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseAnonKey || ''
+);
+
+// Export types for use in the application
+// Unified role system:
+// - ceo_admin: Full access to all features (Admin)
+// - purchaser: Orders materials for warehouse (inventory_manager)
+// - finance_admin: Manages invoices and payments
+// - warehouse_admin: Verifies claims, manages warehouse stock
+// - onsite_team: Claims materials from warehouse
+export const USER_ROLES = ['ceo_admin', 'purchaser', 'finance_admin', 'warehouse_admin', 'onsite_team'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
+
+// Role permission helpers
+export const ROLE_PERMISSIONS = {
+  ceo_admin: {
+    label: 'Administrator',
+    description: 'Full access to all features',
+    canAccessPurchasing: true,
+    canAccessFinance: true,
+    canAccessWarehouse: true,
+    canAccessOnsite: true,
+  },
+  purchaser: {
+    label: 'Purchaser',
+    description: 'Orders materials for warehouse',
+    canAccessPurchasing: true,
+    canAccessFinance: false,
+    canAccessWarehouse: false,
+    canAccessOnsite: false,
+  },
+  finance_admin: {
+    label: 'Finance',
+    description: 'Manages invoices and payments',
+    canAccessPurchasing: false,
+    canAccessFinance: true,
+    canAccessWarehouse: false,
+    canAccessOnsite: false,
+  },
+  warehouse_admin: {
+    label: 'Warehouse Admin',
+    description: 'Verifies claims, manages stock',
+    canAccessPurchasing: false,
+    canAccessFinance: false,
+    canAccessWarehouse: true,
+    canAccessOnsite: false,
+  },
+  onsite_team: {
+    label: 'Onsite Team',
+    description: 'Claims materials from warehouse',
+    canAccessPurchasing: false,
+    canAccessFinance: false,
+    canAccessWarehouse: false,
+    canAccessOnsite: true,
+  },
+} as const;
+
+export type MasterProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type InventoryItem = {
   id: string;
-  product_name: string;
+  master_product_id: string | null;
+  product_name: string; // Kept for backward compatibility or display
   sku: string;
   in_stock: number;
   allocated: number;
@@ -20,18 +91,24 @@ export type InventoryItem = {
   unit_cost: number;
   created_at: string;
   updated_at: string;
+  master_product?: MasterProduct;
+  product_vendors?: {
+    is_primary: boolean;
+    vendor: {
+      name: string;
+    };
+  }[];
 };
 
 export type Vendor = {
   id: string;
   name: string;
-  contact_email: string | null;
-  contact_phone: string | null;
-  lead_time_days: number;
-  country: string;
-  is_active: boolean;
+  contact_email: string;
+  payment_terms: string | null;
+  currency: string | null;
+  tax_id: string | null;
+  integration_config: Record<string, unknown> | null;
   created_at: string;
-  updated_at: string;
 };
 
 export type ProductVendor = {
@@ -83,12 +160,13 @@ export type InternalRequestWithItems = InternalRequest & {
 
 export type PurchaseOrder = {
   id: string;
-  po_number: string;
+  po_number: number; // SERIAL integer in DB
   vendor_id: string;
-  status: 'draft' | 'sent' | 'in_transit' | 'received' | 'cancelled';
+  status: 'draft' | 'ordered' | 'partial' | 'received' | 'cancelled';
   total_amount: number;
   order_date: string | null;
   expected_delivery_date: string | null;
+  expected_delivery: string | null; // DATE column in DB
   actual_delivery_date: string | null;
   notes: string | null;
   created_by: string | null;
@@ -98,7 +176,7 @@ export type PurchaseOrder = {
   qa_completed_at: string | null;
   qa_completed_by: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   vendor?: Vendor;
 };
 
@@ -106,10 +184,9 @@ export type PurchaseOrderItem = {
   id: string;
   po_id: string;
   product_id: string;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
-  created_at: string;
+  quantity_ordered: number;
+  quantity_received: number;
+  unit_cost: number;
   product?: InventoryItem;
 };
 

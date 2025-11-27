@@ -47,10 +47,10 @@ export const InventoryTable = ({ data, filterStatus, onRowClick }: InventoryTabl
 
   const filteredData = filterStatus
     ? data.filter(item => {
-        const stockDaysLeft = calculateStockDaysLeft(item.projected_stock, item.consumed_30d);
-        const status = getStockStatus(stockDaysLeft);
-        return status.status === filterStatus;
-      })
+      const stockDaysLeft = calculateStockDaysLeft(item.projected_stock, item.consumed_30d);
+      const status = getStockStatus(stockDaysLeft);
+      return status.status === filterStatus;
+    })
     : data;
 
   return (
@@ -119,7 +119,8 @@ export const InventoryTable = ({ data, filterStatus, onRowClick }: InventoryTabl
                   onClick={() => onRowClick(item)}
                 >
                   <TableCell className="font-medium hover:text-primary transition-colors">
-                    {item.product_name}
+                    <div>{item.product_name}</div>
+                    <div className="text-xs text-muted-foreground font-mono mt-0.5">{item.sku}</div>
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge className={stockStatus.color}>

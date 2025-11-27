@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Plus, Search, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { TopHeader } from '@/components/navigation/TopHeader';
+import { api } from '@/lib/api';
+import { useQueryParam } from '@/hooks/useQueryParam';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { TopHeader } from '@/components/TopHeader';
+import { CreatePO } from '@/components/procurement/CreatePO';
 import {
   Table,
   TableBody,
@@ -10,167 +18,154 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, ShoppingCart, ClipboardCheck } from 'lucide-react';
-import { usePurchaseOrders, useCompleteQAInspection } from '@/hooks/usePurchaseOrders';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { NewPOModal } from '@/components/NewPOModal';
-import { QAReceivingModal } from '@/components/QAReceivingModal';
-import { useLocation } from 'react-router-dom';
-import { PurchaseOrderWithItems } from '@/lib/supabase';
 
 const PurchaseOrders = () => {
-  const location = useLocation();
-  const preFillData = location.state?.preFill;
-
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [isNewPOOpen, setIsNewPOOpen] = useState(!!preFillData);
-  const [selectedPOForQA, setSelectedPOForQA] = useState<PurchaseOrderWithItems | null>(null);
+  const [statusParam, setStatusParam] = useQueryParam('po_status');
+  const navigate = useNavigate();
 
-  const { data: purchaseOrders, isLoading } = usePurchaseOrders(statusFilter);
-  const completeQA = useCompleteQAInspection();
+  useEffect(() => {
+    if (!statusParam) {
+      setStatusFilter('all');
+      return;
+    }
+    setStatusFilter(statusParam);
+  }, [statusParam]);
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      draft: { label: 'Draft', className: 'bg-gray-500 text-white hover:bg-gray-600' },
-      sent: { label: 'Sent', className: 'bg-blue-500 text-white hover:bg-blue-600' },
-      in_transit: { label: 'In Transit', className: 'bg-yellow-500 text-white hover:bg-yellow-600' },
-      received: { label: 'Received', className: 'bg-green-500 text-white hover:bg-green-600' },
-      cancelled: { label: 'Cancelled', className: 'bg-red-500 text-white hover:bg-red-600' },
-    };
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ['purchase-orders', statusFilter],
+    queryFn: () => api.purchaseOrders.getAll(statusFilter),
+  });
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge className={config.className}>{config.label}</Badge>;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft': return 'secondary';
+      case 'ordered': return 'default';
+      case 'partial': return 'outline';
+      case 'received': return 'default';
+      case 'cancelled': return 'destructive';
+      default: return 'outline';
+    }
   };
+
+  const filteredOrders = orders?.filter((po) =>
+    String(po.po_number).toLowerCase().includes(searchQuery.toLowerCase()) ||
+    po.vendor?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="h-full flex flex-col">
       <TopHeader
         title="Purchase Orders"
-        description="Manage purchase orders sent to vendors"
+        description="Track and manage procurement orders"
         actions={
-          <Button onClick={() => setIsNewPOOpen(true)}>
+          <Button onClick={() => setIsCreateOpen(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            New PO
+            Create PO
           </Button>
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="space-y-6">
-          <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="draft">Draft</TabsTrigger>
-              <TabsTrigger value="sent">Sent</TabsTrigger>
-              <TabsTrigger value="in_transit">In Transit</TabsTrigger>
-              <TabsTrigger value="received">Received</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : purchaseOrders && purchaseOrders.length > 0 ? (
-            <div className="rounded-lg border bg-card overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">PO Number</TableHead>
-                    <TableHead className="font-semibold">Vendor</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold text-right">Total Cost</TableHead>
-                    <TableHead className="font-semibold">Order Date</TableHead>
-                    <TableHead className="font-semibold">Expected Delivery</TableHead>
-                    <TableHead className="font-semibold">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchaseOrders.map((po) => (
-                    <TableRow
-                      key={po.id}
-                      className="hover:bg-muted/50 transition-colors"
-                    >
-                      <TableCell className="font-medium font-mono">
-                        {po.po_number}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{po.vendor?.name}</p>
-                          {po.vendor?.country && (
-                            <p className="text-xs text-muted-foreground">
-                              {po.vendor.country}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(po.status)}</TableCell>
-                      <TableCell className="text-right font-bold">
-                        ${po.total_amount.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {po.order_date
-                          ? format(new Date(po.order_date), 'MMM d, yyyy')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {po.expected_delivery_date
-                          ? format(new Date(po.expected_delivery_date), 'MMM d, yyyy')
-                          : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {po.status === 'in_transit' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedPOForQA(po)}
-                          >
-                            <ClipboardCheck className="h-4 w-4 mr-2" />
-                            Receive & QA
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 border rounded-lg bg-card">
-              <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No purchase orders found</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {statusFilter === 'all'
-                  ? 'Create your first purchase order to get started'
-                  : `No ${statusFilter.replace('_', ' ')} purchase orders at this time`}
-              </p>
-              <Button onClick={() => setIsNewPOOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Purchase Order
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            {['all', 'draft', 'ordered', 'partial', 'received'].map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setStatusFilter(status);
+                  setStatusParam(status === 'all' ? null : status);
+                }}
+                className="capitalize"
+              >
+                {status}
               </Button>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
+
+        <div className="border rounded-md bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>PO Number</TableHead>
+                <TableHead>Vendor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Order Date</TableHead>
+                <TableHead>Expected Delivery</TableHead>
+                <TableHead className="text-right">Total Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[250px] mx-auto" />
+                      <Skeleton className="h-4 w-[200px] mx-auto" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredOrders?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p>No purchase orders found</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrders?.map((po) => (
+                  <TableRow
+                    key={po.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/purchase-orders/${po.id}`)}
+                  >
+                    <TableCell className="font-medium">{po.po_number}</TableCell>
+                    <TableCell>{po.vendor?.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(po.status) as any} className="capitalize">
+                        {po.status.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {po.order_date ? new Date(po.order_date).toLocaleDateString() : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {po.expected_delivery_date ? (
+                        <span className={new Date(po.expected_delivery_date) < new Date() && po.status !== 'received' ? 'text-destructive font-medium' : ''}>
+                          {new Date(po.expected_delivery_date).toLocaleDateString()}
+                        </span>
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ${po.total_amount.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
 
-      <NewPOModal
-        isOpen={isNewPOOpen}
-        onClose={() => setIsNewPOOpen(false)}
-        preFillData={preFillData}
+      <CreatePO
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
       />
 
-      <QAReceivingModal
-        isOpen={!!selectedPOForQA}
-        onClose={() => setSelectedPOForQA(null)}
-        purchaseOrder={selectedPOForQA}
-        onComplete={async (qaData) => {
-          await completeQA.mutateAsync(qaData);
-        }}
-      />
     </div>
   );
 };

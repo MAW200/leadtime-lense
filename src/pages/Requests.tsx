@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TopHeader } from '@/components/TopHeader';
+import { TopHeader } from '@/components/navigation/TopHeader';
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import { useInternalRequests } from '@/hooks/useRequests';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { NewRequestModal } from '@/components/NewRequestModal';
+import { NewRequestModal } from '@/components/modals/NewRequestModal';
 
 const Requests = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');

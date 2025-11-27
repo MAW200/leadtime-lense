@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,7 +44,7 @@ All colors MUST be HSL.
     --input: 220 13% 91%;
     --ring: 160 84% 39%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem; /* 8px - Modern, subtle rounding */
 
     --chart-1: 160 84% 39%;
     --chart-2: 217 91% 60%;
@@ -61,54 +63,67 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 220 13% 9%;
-    --foreground: 220 9% 98%;
+    /* Navy blue dark backgrounds from Figma */
+    --background: 222 47% 11%; /* #0A0E27 - Deep navy */
+    --foreground: 210 40% 98%; /* #F8FAFC - Almost white */
 
-    --card: 220 13% 11%;
-    --card-foreground: 220 9% 98%;
+    /* Card surfaces - slightly lighter navy */
+    --card: 223 39% 16%; /* #1A2342 - Card background */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 220 13% 11%;
-    --popover-foreground: 220 9% 98%;
+    /* Popover/Dropdown */
+    --popover: 223 39% 18%; /* #1E2749 */
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 160 84% 39%;
+    /* Primary - Blue accent from Figma */
+    --primary: 217 91% 60%; /* #3B82F6 - Bright blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 16%;
-    --secondary-foreground: 220 9% 98%;
+    /* Secondary surfaces */
+    --secondary: 223 39% 20%; /* #242D4A - Lighter cards */
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 13% 16%;
-    --muted-foreground: 220 9% 65%;
+    /* Muted elements */
+    --muted: 223 30% 24%; /* #2D3651 */
+    --muted-foreground: 215 20% 65%; /* #94A3B8 - Muted text */
 
-    --accent: 142 71% 45%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Blue highlight */
+    --accent: 217 91% 70%; /* #60A5FA - Lighter blue */
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 62% 31%;
-    --destructive-foreground: 220 9% 98%;
+    /* Destructive - Red from Figma */
+    --destructive: 0 84% 60%; /* #EF4444 */
+    --destructive-foreground: 210 40% 98%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    /* Warning - Orange */
+    --warning: 38 92% 50%; /* #F59E0B */
+    --warning-foreground: 222 47% 11%;
 
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    /* Success - Green from Figma */
+    --success: 142 76% 36%; /* #10B981 */
+    --success-foreground: 210 40% 98%;
 
-    --border: 220 13% 16%;
-    --input: 220 13% 16%;
-    --ring: 160 84% 39%;
+    /* Borders and inputs */
+    --border: 223 30% 24%; /* #2D3651 - Subtle borders */
+    --input: 223 39% 18%; /* #1E2749 - Input backgrounds */
+    --ring: 217 91% 60%; /* Blue focus ring */
 
-    --chart-1: 160 84% 39%;
-    --chart-2: 217 91% 60%;
-    --chart-3: 271 91% 65%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
+    /* Chart colors - Modern blue palette */
+    --chart-1: 217 91% 60%; /* Blue */
+    --chart-2: 142 76% 36%; /* Green */
+    --chart-3: 271 91% 65%; /* Purple */
+    --chart-4: 38 92% 50%; /* Orange */
+    --chart-5: 0 84% 60%; /* Red */
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar - Darker navy */
+    --sidebar-background: 222 47% 9%; /* #070B1F - Darkest navy */
+    --sidebar-foreground: 215 20% 65%; /* #94A3B8 */
+    --sidebar-primary: 217 91% 60%; /* Active blue */
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 223 39% 16%; /* #1A2342 - Hover state */
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 223 30% 18%; /* #202840 */
+    --sidebar-ring: 217 91% 60%;
   }
 }
 
@@ -119,5 +134,16 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Enable dark mode by default */
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    @apply dark;
   }
 }

@@ -2,10 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { Project } from '@/lib/supabase';
 
-export const useProjects = (statusFilter?: string) => {
+export const useProjects = (statusFilter?: string, userId?: string) => {
   return useQuery({
-    queryKey: ['projects', statusFilter],
-    queryFn: () => api.projects.getAll(statusFilter),
+    queryKey: ['projects', statusFilter, userId],
+    queryFn: () => api.projects.getAll(statusFilter, userId),
   });
 };
 

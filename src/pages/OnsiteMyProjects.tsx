@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FolderKanban, MapPin } from 'lucide-react';
 import { useUserProjects } from '@/hooks/useUserProjects';
@@ -9,10 +9,9 @@ import { format } from 'date-fns';
 
 const OnsiteMyProjects = () => {
   const navigate = useNavigate();
-  const { userName } = useRole();
+  const { userName, userId } = useRole();
 
-  const mockUserId = 'mock-onsite-user-id';
-  const { data: userProjects, isLoading } = useUserProjects(mockUserId);
+  const { data: userProjects, isLoading } = useUserProjects(userId);
 
   return (
     <div className="h-full flex flex-col">

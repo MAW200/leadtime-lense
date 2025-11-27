@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Package, Search, Plus } from 'lucide-react';
 import { useInventoryItems } from '@/hooks/useInventory';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/PageHeader';
-import { OnsiteRequestModal } from '@/components/OnsiteRequestModal';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { OnsiteRequestModal } from '@/components/modals/OnsiteRequestModal';
 import { InventoryItem } from '@/lib/supabase';
 
 const OnsiteBrowse = () => {
@@ -91,9 +91,8 @@ const OnsiteBrowse = () => {
                 return (
                   <Card
                     key={product.id}
-                    className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
-                      isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''
-                    }`}
+                    className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
                     onClick={() => !isOutOfStock && handleProductClick(product)}
                   >
                     <CardHeader>
@@ -120,10 +119,9 @@ const OnsiteBrowse = () => {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                           <span className="text-sm text-muted-foreground">Available</span>
-                          <span className={`text-2xl font-bold ${
-                            isOutOfStock ? 'text-destructive' :
+                          <span className={`text-2xl font-bold ${isOutOfStock ? 'text-destructive' :
                             isLowStock ? 'text-yellow-600' : 'text-green-600'
-                          }`}>
+                            }`}>
                             {available}
                           </span>
                         </div>

@@ -1,16 +1,15 @@
-import { ReactNode } from 'react';
-import { Sidebar } from './Sidebar';
+import { Outlet } from 'react-router-dom';
+import { Sidebar } from '../navigation/Sidebar';
 
-interface MainLayoutProps {
-  children: ReactNode;
-}
-
-export const MainLayout = ({ children }: MainLayoutProps) => {
+export const MainLayout = () => {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="min-h-screen bg-background">
+      {/* macOS Dynamic Island Navigation */}
       <Sidebar />
-      <main className="flex-1 overflow-hidden flex flex-col">
-        {children}
+
+      {/* Main Content Area */}
+      <main className="container mx-auto px-4 pb-8">
+        <Outlet />
       </main>
     </div>
   );

@@ -1,0 +1,17 @@
+# Project Context: Purchaser & Finance Module
+## Architectural Constraints
+1. [cite_start]**Database-Centric Integrity:** Business logic for stock and status must be enforced via PostgreSQL constraints and triggers, not frontend code[cite: 17].
+2. [cite_start]**Hybrid Ledger:** We use a `inventory_transactions` table for audit history, but sync to a `current_stock` column on the `products` table for fast reads[cite: 42].
+3. [cite_start]**Optimistic UI:** Frontend uses TanStack Query with `onMutate` for instant feedback[cite: 278].
+
+## Schema Definitions
+(Reference the detailed SQL schema defined in Section 11.1 and 3.2 of the PRD).
+
+## Frontend Architectural Guidelines
+1. **Tech Stack:** React (Next.js/Vite), TailwindCSS, Shadcn UI (optional), Supabase Client.
+2. **State Management:** Use **TanStack Query (v5)** for all data fetching. [cite_start]Do NOT use `useEffect` for data fetching[cite: 23].
+3. [cite_start]**Forms:** Use **React Hook Form** with Zod validation.
+4. **Logic Constraint:** strict separation of concerns.
+    - VALID: Form validation (email regex), UI state (isModalOpen).
+    - INVALID: Calculating stock totals, defining status transitions.
+5. [cite_start]**Optimistic Updates:** Implement `onMutate` handlers for high responsiveness[cite: 24].

@@ -1,20 +1,26 @@
+import { ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/Login";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
-import { MainLayout } from "./components/MainLayout";
-import { OnsiteLayout } from "./components/OnsiteLayout";
-import { WarehouseLayout } from "./components/WarehouseLayout";
+import { MainLayout } from "./components/layout/MainLayout";
+import { OnsiteLayout } from "./components/layout/OnsiteLayout";
+import { WarehouseLayout } from "./components/layout/WarehouseLayout";
 import Index from "./pages/Index";
 import PurchaseOrders from "./pages/PurchaseOrders";
+import PurchaseOrderDetail from "./pages/PurchaseOrderDetail";
 import Products from "./pages/Products";
+import Vendors from "./pages/Vendors";
+import VendorProfile from "./pages/VendorProfile";
 import Settings from "./pages/Settings";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectTemplates from "./pages/ProjectTemplates";
 import AuditLog from "./pages/AuditLog";
+import Invoices from "./pages/Invoices";
 import OnsiteMyProjects from "./pages/OnsiteMyProjects";
 import OnsiteProjectBOM from "./pages/OnsiteProjectBOM";
 import WarehousePendingClaims from "./pages/WarehousePendingClaims";
@@ -23,21 +29,22 @@ import WarehousePendingReturns from "./pages/WarehousePendingReturns";
 import WarehouseStockAdjustments from "./pages/WarehouseStockAdjustments";
 import NotFound from "./pages/NotFound";
 import { type UserRole } from "./lib/supabase";
+import { HOME_BY_ROLE } from "./constants/routes";
 
 const queryClient = new QueryClient();
 
-const HOME_BY_ROLE: Record<UserRole, string> = {
-  ceo_admin: "/",
-  warehouse_admin: "/warehouse/pending-claims",
-  onsite_team: "/onsite/projects",
+type RoleGuardProps = {
+  allowedRoles: UserRole[];
+  currentRole: UserRole;
+  children: ReactNode;
 };
 
-const guardRoute = (currentRole: UserRole, allowedRoles: UserRole[], element: JSX.Element) => {
+const RoleGuard = ({ allowedRoles, currentRole, children }: RoleGuardProps) => {
   if (!allowedRoles.includes(currentRole)) {
     return <Navigate to={HOME_BY_ROLE[currentRole]} replace />;
   }
 
-  return element;
+  return <>{children}</>;
 };
 
 const AppRoutes = () => {
@@ -45,150 +52,58 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
       <Route
-        path="/"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <Index />
-          </MainLayout>,
-        )}
-      />
+        element={
+          <RoleGuard allowedRoles={["ceo_admin", "purchaser", "finance_admin"]} currentRole={currentRole}>
+            <MainLayout />
+          </RoleGuard>
+        }
+      >
+        <Route index element={<Index />} />
+        <Route path="purchase-orders" element={<PurchaseOrders />} />
+        <Route path="purchase-orders/:id" element={<PurchaseOrderDetail />} />
+        <Route path="products" element={<Products />} />
+        <Route path="vendors" element={<Vendors />} />
+        <Route path="vendors/:id" element={<VendorProfile />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="projects" element={<Projects />} />
+        <Route path="projects/:id" element={<ProjectDetail />} />
+        <Route path="project-templates" element={<ProjectTemplates />} />
+        <Route path="audit-log" element={<AuditLog />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
+
       <Route
-        path="/purchase-orders"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <PurchaseOrders />
-          </MainLayout>,
-        )}
-      />
+        element={
+          <RoleGuard allowedRoles={["onsite_team"]} currentRole={currentRole}>
+            <OnsiteLayout />
+          </RoleGuard>
+        }
+      >
+        <Route path="onsite/dashboard" element={<Index />} />
+        <Route path="onsite/projects" element={<OnsiteMyProjects />} />
+        <Route path="onsite/projects/:id" element={<OnsiteProjectBOM />} />
+      </Route>
+
       <Route
-        path="/products"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <Products />
-          </MainLayout>,
-        )}
-      />
-      <Route
-        path="/projects"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <Projects />
-          </MainLayout>,
-        )}
-      />
-      <Route
-        path="/projects/:id"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <ProjectDetail />
-          </MainLayout>,
-        )}
-      />
-      <Route
-        path="/project-templates"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <ProjectTemplates />
-          </MainLayout>,
-        )}
-      />
-      <Route
-        path="/audit-log"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <AuditLog />
-          </MainLayout>,
-        )}
-      />
-      <Route
-        path="/settings"
-        element={guardRoute(
-          currentRole,
-          ["ceo_admin"],
-          <MainLayout>
-            <Settings />
-          </MainLayout>,
-        )}
-      />
-      <Route
-        path="/onsite/projects"
-        element={guardRoute(
-          currentRole,
-          ["onsite_team"],
-          <OnsiteLayout>
-            <OnsiteMyProjects />
-          </OnsiteLayout>,
-        )}
-      />
-      <Route
-        path="/onsite/projects/:id"
-        element={guardRoute(
-          currentRole,
-          ["onsite_team"],
-          <OnsiteLayout>
-            <OnsiteProjectBOM />
-          </OnsiteLayout>,
-        )}
-      />
-      <Route
-        path="/warehouse/pending-claims"
-        element={guardRoute(
-          currentRole,
-          ["warehouse_admin"],
-          <WarehouseLayout>
-            <WarehousePendingClaims />
-          </WarehouseLayout>,
-        )}
-      />
-      <Route
-        path="/warehouse/pending-returns"
-        element={guardRoute(
-          currentRole,
-          ["warehouse_admin"],
-          <WarehouseLayout>
-            <WarehousePendingReturns />
-          </WarehouseLayout>,
-        )}
-      />
-      <Route
-        path="/warehouse/stock-adjustments"
-        element={guardRoute(
-          currentRole,
-          ["warehouse_admin"],
-          <WarehouseLayout>
-            <WarehouseStockAdjustments />
-          </WarehouseLayout>,
-        )}
-      />
-      <Route
-        path="/warehouse/claim-history"
-        element={guardRoute(
-          currentRole,
-          ["warehouse_admin"],
-          <WarehouseLayout>
-            <WarehouseClaimHistory />
-          </WarehouseLayout>,
-        )}
-      />
+        element={
+          <RoleGuard allowedRoles={["warehouse_admin"]} currentRole={currentRole}>
+            <WarehouseLayout />
+          </RoleGuard>
+        }
+      >
+        <Route path="warehouse/dashboard" element={<Index />} />
+        <Route path="warehouse/pending-claims" element={<WarehousePendingClaims />} />
+        <Route path="warehouse/pending-returns" element={<WarehousePendingReturns />} />
+        <Route path="warehouse/stock-adjustments" element={<WarehouseStockAdjustments />} />
+        <Route path="warehouse/claim-history" element={<WarehouseClaimHistory />} />
+      </Route>
+
       <Route
         path="*"
         element={
-          currentRole === "ceo_admin" ? (
+          currentRole === "ceo_admin" || currentRole === "purchaser" || currentRole === "finance_admin" ? (
             <NotFound />
           ) : (
             <Navigate to={HOME_BY_ROLE[currentRole]} replace />
@@ -205,7 +120,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>

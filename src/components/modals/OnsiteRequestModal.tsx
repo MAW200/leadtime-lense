@@ -22,9 +22,9 @@ import { useInventoryItems } from '@/hooks/useInventory';
 import { useProjects } from '@/hooks/useProjects';
 import { toast } from 'sonner';
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
-import { PhotoUpload } from './PhotoUpload';
+import { PhotoUpload } from '@/components/shared/PhotoUpload';
 import { useRole } from '@/contexts/RoleContext';
-import { Alert, AlertDescription } from './ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InventoryItem } from '@/lib/supabase';
 
 interface OnsiteRequestModalProps {

@@ -22,12 +22,12 @@ export const useCreateStockAdjustment = () => {
       adminName: string;
     }) => {
       return api.stockAdjustments.create({
-        productId: params.productId,
-        quantityChange: params.quantityChange,
+        product_id: params.productId,
+        quantity_change: params.quantityChange,
         reason: params.reason,
         notes: params.notes,
-        adminId: params.adminId,
-        adminName: params.adminName,
+        admin_id: params.adminId,
+        admin_name: params.adminName,
       });
     },
     onSuccess: () => {

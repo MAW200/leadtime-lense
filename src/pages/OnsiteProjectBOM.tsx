@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Package, PackagePlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PageHeader } from '@/components/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { PhotoUpload } from '@/components/PhotoUpload';
+import { PhotoUpload } from '@/components/shared/PhotoUpload';
 import { useProject } from '@/hooks/useProjects';
 import { useProjectMaterials } from '@/hooks/useProjectMaterials';
 import { useClaims, useCreateClaim } from '@/hooks/useClaims';
@@ -39,6 +39,7 @@ import { format } from 'date-fns';
 import type { ProjectMaterial } from '@/lib/supabase';
 import { useInventoryItems } from '@/hooks/useInventory';
 import { useCreateReturn } from '@/hooks/useReturns';
+import { useUserProjects } from '@/hooks/useUserProjects';
 
 type PhaseFilter = 'all' | 'P1' | 'P2a' | 'P2b';
 
@@ -52,7 +53,8 @@ const STATUS_BADGES: Record<string, { label: string; variant: 'default' | 'secon
 const OnsiteProjectBOM = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { userName } = useRole();
+  const { userName, userId } = useRole();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<'bom' | 'history'>('bom');
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
@@ -85,15 +87,38 @@ const OnsiteProjectBOM = () => {
   const createClaim = useCreateClaim();
   const { data: inventoryItems } = useInventoryItems();
   const createReturn = useCreateReturn();
+  const { data: assignedProjects, isLoading: assignedLoading } = useUserProjects(userId);
 
-  const onsiteUserId = useMemo(() => userName?.toLowerCase().replace(/\s+/g, '-') || 'onsite-user', [userName]);
+  const onsiteUserId = useMemo(() => userId || userName?.toLowerCase().replace(/\s+/g, '-') || 'onsite-user', [userId, userName]);
+
+  const isAssignedToProject = useMemo(() => {
+    if (!assignedProjects || !id) return false;
+    return assignedProjects.some((assignment) => assignment.project_id === id);
+  }, [assignedProjects, id]);
+
+  useEffect(() => {
+    if (searchParams.get('claim') === 'true') {
+      setIsClaimModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const closeClaimModal = () => {
+    setIsClaimModalOpen(false);
+    if (searchParams.get('claim')) {
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete('claim');
+        return params;
+      });
+    }
+  };
 
   const resetClaimForm = () => {
     setSelectedItems({});
     setPhaseFilter('all');
     setPhotoUrl('');
     setNotes('');
-    setIsClaimModalOpen(false);
+    closeClaimModal();
   };
 
   const resetEmergencyForm = () => {
@@ -106,13 +131,29 @@ const OnsiteProjectBOM = () => {
     setIsEmergencyModalOpen(false);
   };
 
+  const pendingReservations = useMemo(() => {
+    const map = new Map<string, number>();
+    claims
+      ?.filter((claim) => claim.status === 'pending')
+      .forEach((claim) => {
+        claim.claim_items?.forEach((item) => {
+          if (!item.product_id || !item.quantity_requested) return;
+          map.set(item.product_id, (map.get(item.product_id) || 0) + item.quantity_requested);
+        });
+      });
+    return map;
+  }, [claims]);
+
   const filteredMaterials = useMemo(() => {
     if (!materials) return [];
     if (phaseFilter === 'all') return materials;
     return materials.filter(material => material.phase === phaseFilter);
   }, [materials, phaseFilter]);
 
-  const remainingQuantity = (material: ProjectMaterial) => material.required_quantity - material.claimed_quantity;
+  const remainingQuantity = (material: ProjectMaterial) => {
+    const reserved = pendingReservations.get(material.product_id) || 0;
+    return Math.max(material.required_quantity - material.claimed_quantity - reserved, 0);
+  };
 
   const handleQuantityChange = (materialId: string, max: number, value: number) => {
     if (value <= 0) {
@@ -337,6 +378,26 @@ const OnsiteProjectBOM = () => {
 
   const hasAnyMaterials = materials && materials.length > 0;
 
+  if (!assignedLoading && assignedProjects && id && !isAssignedToProject) {
+    return (
+      <div className="h-full flex flex-col">
+        <PageHeader title="Access Restricted" />
+        <div className="flex-1 overflow-y-auto px-8 py-8">
+          <div className="text-center py-12 border rounded-lg bg-card">
+            <p className="text-lg font-semibold mb-2">You are not assigned to this project.</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Contact your administrator to request access or switch to one of your assigned projects.
+            </p>
+            <Button onClick={() => navigate('/onsite/projects')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to My Projects
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col">
       <PageHeader
@@ -394,6 +455,7 @@ const OnsiteProjectBOM = () => {
                     <TableBody>
                       {materials?.map(material => {
                         const remaining = remainingQuantity(material);
+                        const reserved = pendingReservations.get(material.product_id) || 0;
                         const statusBadge = remaining <= 0
                           ? { label: 'Fulfilled', className: 'bg-secondary text-secondary-foreground' }
                           : { label: `${remaining} remaining`, className: 'bg-green-500 text-white' };
@@ -407,6 +469,9 @@ const OnsiteProjectBOM = () => {
                             <TableCell className="text-right">{material.claimed_quantity}</TableCell>
                             <TableCell className="text-right">
                               <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
+                              {reserved > 0 && remaining > 0 && (
+                                <p className="text-xs text-muted-foreground mt-1">{reserved} reserved in pending claims</p>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -468,23 +533,23 @@ const OnsiteProjectBOM = () => {
                       {claims
                         .filter(claim => historyStatusFilter === 'all' || claim.status === historyStatusFilter)
                         .map(claim => {
-                        const badgeConfig = STATUS_BADGES[claim.status] || STATUS_BADGES.pending;
-                        return (
-                          <TableRow key={claim.id}>
-                            <TableCell className="font-medium">{claim.claim_number}</TableCell>
-                            <TableCell>{format(new Date(claim.created_at), 'MMM d, yyyy h:mm a')}</TableCell>
-                            <TableCell>{claim.claim_items?.length || 0}</TableCell>
-                            <TableCell>
-                              <Badge className={badgeConfig.className}>{badgeConfig.label}</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="outline" size="sm" onClick={() => setViewClaimId(claim.id)}>
-                                View
-                                <ArrowRight className="h-4 w-4 ml-2" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
+                          const badgeConfig = STATUS_BADGES[claim.status] || STATUS_BADGES.pending;
+                          return (
+                            <TableRow key={claim.id}>
+                              <TableCell className="font-medium">{claim.claim_number}</TableCell>
+                              <TableCell>{format(new Date(claim.created_at), 'MMM d, yyyy h:mm a')}</TableCell>
+                              <TableCell>{claim.claim_items?.length || 0}</TableCell>
+                              <TableCell>
+                                <Badge className={badgeConfig.className}>{badgeConfig.label}</Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="outline" size="sm" onClick={() => setViewClaimId(claim.id)}>
+                                  View
+                                  <ArrowRight className="h-4 w-4 ml-2" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
                         })}
                     </TableBody>
                   </Table>
@@ -503,7 +568,16 @@ const OnsiteProjectBOM = () => {
         </Tabs>
       </div>
 
-      <Dialog open={isClaimModalOpen} onOpenChange={setIsClaimModalOpen}>
+      <Dialog
+        open={isClaimModalOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setIsClaimModalOpen(true);
+          } else {
+            closeClaimModal();
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Initiate Claim</DialogTitle>
@@ -541,6 +615,7 @@ const OnsiteProjectBOM = () => {
                   <TableBody>
                     {filteredMaterials.map(material => {
                       const remaining = remainingQuantity(material);
+                      const reserved = pendingReservations.get(material.product_id) || 0;
                       const disabled = remaining <= 0;
 
                       return (
@@ -557,6 +632,9 @@ const OnsiteProjectBOM = () => {
                             <Badge variant={disabled ? 'secondary' : 'outline'}>
                               {remaining}
                             </Badge>
+                            {reserved > 0 && (
+                              <p className="text-xs text-muted-foreground mt-1">{reserved} reserved</p>
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <Input

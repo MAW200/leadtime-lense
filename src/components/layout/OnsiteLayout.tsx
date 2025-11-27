@@ -1,16 +1,15 @@
-import { ReactNode } from 'react';
-import { OnsiteSidebar } from './OnsiteSidebar';
+import { Outlet } from 'react-router-dom';
+import { OnsiteSidebar } from '../navigation/OnsiteSidebar';
 
-interface OnsiteLayoutProps {
-  children: ReactNode;
-}
-
-export const OnsiteLayout = ({ children }: OnsiteLayoutProps) => {
+export const OnsiteLayout = () => {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="min-h-screen bg-background">
+      {/* macOS Dynamic Island Navigation */}
       <OnsiteSidebar />
-      <main className="flex-1 overflow-hidden flex flex-col">
-        {children}
+
+      {/* Main Content Area */}
+      <main className="container mx-auto px-4 pb-8">
+        <Outlet />
       </main>
     </div>
   );

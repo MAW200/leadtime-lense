@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { UserProfileMenu } from './UserProfileMenu';
+import { UserProfileMenu } from '@/components/navigation/UserProfileMenu';
 
 interface PageHeaderProps {
   title: string;

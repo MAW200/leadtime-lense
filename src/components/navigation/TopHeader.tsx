@@ -1,5 +1,5 @@
 import { UserProfileMenu } from './UserProfileMenu';
-import { NotificationBell } from './NotificationBell';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 interface TopHeaderProps {
   title?: string;
@@ -9,19 +9,31 @@ interface TopHeaderProps {
 
 export const TopHeader = ({ title, description, actions }: TopHeaderProps) => {
   return (
-    <header className="border-b bg-card">
-      <div className="px-8 py-4">
+    <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <div className="px-8 py-6">
         <div className="flex items-center justify-between">
           {(title || description) && (
-            <div>
-              {title && <h1 className="text-2xl font-bold text-foreground">{title}</h1>}
+            <div className="flex-1">
+              {title && (
+                <h1 className="text-3xl font-bold text-foreground tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  {title}
+                </h1>
+              )}
               {description && (
-                <p className="text-sm text-muted-foreground mt-1">{description}</p>
+                <p className="text-sm text-muted-foreground/80 mt-2">
+                  {description}
+                </p>
               )}
             </div>
           )}
-          <div className="flex items-center gap-4 ml-auto">
-            {actions}
+
+          {/* Actions & Profile Section with Rounded Container */}
+          <div className="flex items-center gap-3 p-2 rounded-2xl bg-muted/30 border border-border/30">
+            {actions && (
+              <div className="flex items-center gap-2 pr-3 border-r border-border/30">
+                {actions}
+              </div>
+            )}
             <NotificationBell />
             <UserProfileMenu />
           </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, ChangeEvent } from 'react';
-import { Button } from './ui/button';
-import { Label } from './ui/label';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import {
   Camera,
   Upload,
@@ -9,13 +9,13 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Progress } from './ui/progress';
+import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from './ui/dialog';
+} from '@/components/ui/dialog';
 
 // Photo upload now uses base64 data URLs
 // TODO: Add backend file upload endpoint for production use
@@ -97,7 +97,7 @@ export const PhotoUpload = ({
       // Convert to base64 data URL
       // TODO: Replace with backend file upload endpoint
       setProgress(60);
-      
+
       const reader = new FileReader();
       reader.onload = () => {
         const dataUrl = reader.result as string;

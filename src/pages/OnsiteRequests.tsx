@@ -13,8 +13,8 @@ import { Plus, FileText, Eye } from 'lucide-react';
 import { useInternalRequests } from '@/hooks/useRequests';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { OnsiteRequestModal } from '@/components/OnsiteRequestModal';
-import { PageHeader } from '@/components/PageHeader';
+import { OnsiteRequestModal } from '@/components/modals/OnsiteRequestModal';
+import { PageHeader } from '@/components/shared/PageHeader';
 import {
   Dialog,
   DialogContent,

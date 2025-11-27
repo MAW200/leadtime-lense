@@ -89,9 +89,9 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
     return primaryVendor.vendor?.contact_email || primaryVendor.contact_email || null;
   };
 
-  const getVendorCountry = () => {
+  const getVendorCurrency = () => {
     if (!primaryVendor) return null;
-    return primaryVendor.vendor?.country || primaryVendor.country || 'N/A';
+    return primaryVendor.vendor?.currency || 'USD';
   };
 
   return (
@@ -200,8 +200,8 @@ export const ProductDetailPanel = ({ item, isOpen, onClose }: ProductDetailPanel
                     <p className="text-lg font-bold">{primaryVendor.minimum_order_qty || 0} units</p>
                   </div>
                   <div className="bg-muted/50 rounded p-2">
-                    <span className="text-xs text-muted-foreground">Country</span>
-                    <p className="text-lg font-bold">{getVendorCountry()}</p>
+                    <span className="text-xs text-muted-foreground">Currency</span>
+                    <p className="text-lg font-bold">{getVendorCurrency()}</p>
                   </div>
                 </div>
                 {primaryVendor.vendor_sku && (

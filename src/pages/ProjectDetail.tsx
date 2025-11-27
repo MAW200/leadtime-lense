@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TopHeader } from '@/components/TopHeader';
+import { TopHeader } from '@/components/navigation/TopHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,10 +18,15 @@ import { ArrowLeft, Package, AlertCircle, MapPin, FileText, Calendar, Image } fr
 import { useProject } from '@/hooks/useProjects';
 import { useProjectStats, useProjectRequestItems, type ProjectRequestItem } from '@/hooks/useProjectStats';
 import { format } from 'date-fns';
+import { AssignTemplateModal } from '@/components/modals/AssignTemplateModal';
+import { AssignOnsiteModal } from '@/components/modals/AssignOnsiteModal';
+import { AllocatedProducts } from '@/components/AllocatedProducts';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isAssignTemplateOpen, setIsAssignTemplateOpen] = useState(false);
+  const [isAssignOnsiteOpen, setIsAssignOnsiteOpen] = useState(false);
   const { data: project, isLoading: projectLoading } = useProject(id);
   const { data: projectStats } = useProjectStats(id);
   const { data: requestItems, isLoading: requestItemsLoading } = useProjectRequestItems(id);
@@ -74,10 +80,19 @@ const ProjectDetail = () => {
       <TopHeader
         title={project.name}
         actions={
-          <Button variant="outline" onClick={() => navigate('/projects')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Projects
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsAssignTemplateOpen(true)}>
+              <Package className="h-4 w-4 mr-2" />
+              Assign Template
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsAssignOnsiteOpen(true)}>
+              Manage Onsite Team
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/projects')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Projects
+            </Button>
+          </div>
         }
       />
 
@@ -251,9 +266,19 @@ const ProjectDetail = () => {
                 )}
               </CardContent>
             </Card>
+            <AllocatedProducts projectId={id!} />
           </TabsContent>
         </Tabs>
       </div>
+
+      <AssignTemplateModal
+        isOpen={isAssignTemplateOpen}
+        onClose={() => setIsAssignTemplateOpen(false)}
+        projectId={id!}
+        projectName={project.name}
+        hasMaterials={(stats?.total_products_allocated || 0) > 0}
+      />
+      <AssignOnsiteModal projectId={id!} isOpen={isAssignOnsiteOpen} onClose={() => setIsAssignOnsiteOpen(false)} />
     </div>
   );
 };
