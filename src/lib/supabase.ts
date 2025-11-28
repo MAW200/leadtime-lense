@@ -89,6 +89,21 @@ export type InventoryItem = {
   projected_stock: number;
   safety_stock: number;
   unit_cost: number;
+  // API fields from external products
+  supply_price?: number;
+  install_price?: number;
+  supplier_name?: string | null;
+  pm_category?: string;
+  type?: string;
+  description?: string | null;
+  uom?: string;
+  color?: string | null;
+  material?: string | null;
+  width?: string | null;
+  height?: string | null;
+  depth?: string | null;
+  status?: string;
+  attachments?: string | null;
   created_at: string;
   updated_at: string;
   master_product?: MasterProduct;

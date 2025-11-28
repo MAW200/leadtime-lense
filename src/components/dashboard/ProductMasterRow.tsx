@@ -12,6 +12,8 @@ interface ProductMasterRowProps {
     onRowClick: (item: InventoryItem) => void;
     filterStatus: 'critical' | 'reorder' | 'healthy' | null;
     onAddVariant: (masterId: string) => void;
+    expanded?: boolean;
+    onExpandedChange?: (expanded: boolean) => void;
 }
 
 export const ProductMasterRow = ({
@@ -20,8 +22,20 @@ export const ProductMasterRow = ({
     onRowClick,
     filterStatus,
     onAddVariant,
+    expanded: controlledExpanded,
+    onExpandedChange,
 }: ProductMasterRowProps) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [internalExpanded, setInternalExpanded] = useState(false);
+    const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+    
+    const handleToggle = () => {
+        const newExpanded = !isExpanded;
+        if (onExpandedChange) {
+            onExpandedChange(newExpanded);
+        } else {
+            setInternalExpanded(newExpanded);
+        }
+    };
 
     // Calculate aggregate stats
     const totalStock = variants.reduce((sum, v) => sum + v.in_stock, 0);
@@ -49,7 +63,7 @@ export const ProductMasterRow = ({
                     "flex items-center p-4 cursor-pointer hover:bg-accent/50 transition-colors",
                     isExpanded && "bg-accent/30"
                 )}
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={handleToggle}
             >
                 <div className="mr-4">
                     {isExpanded ? (
@@ -100,7 +114,7 @@ export const ProductMasterRow = ({
                         ) : hasReorder ? (
                             <Badge variant="secondary" className="bg-yellow-500/15 text-yellow-600 hover:bg-yellow-500/25">Low Stock</Badge>
                         ) : (
-                            <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Healthy</Badge>
+                            <Badge variant="outline" className="text-green-500 border-green-400 bg-green-100 dark:bg-green-900/30 dark:border-green-500 dark:text-green-400">Healthy</Badge>
                         )}
                     </div>
                 </div>

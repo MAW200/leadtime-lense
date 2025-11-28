@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   ComposedChart,
   Line,
@@ -7,122 +6,119 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useProjectBurnRate } from '@/hooks/useDashboardMetrics';
-import { Skeleton } from '@/components/ui/skeleton';
 
-export const ProjectBurnChart = () => {
-  const { data, isLoading } = useProjectBurnRate();
+const mockData = [
+  { month: 'Jan', claims: 2400, spend: 1100 },
+  { month: 'Feb', claims: 1800, spend: 900 },
+  { month: 'Mar', claims: 2600, spend: 1700 },
+  { month: 'Apr', claims: 2000, spend: 2100 },
+  { month: 'May', claims: 2200, spend: 2300 },
+  { month: 'Jun', claims: 1900, spend: 2000 },
+  { month: 'Jul', claims: 2800, spend: 2400 },
+];
 
-  const chartData = useMemo(() => {
-    if (!data) return [];
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
 
-    const { claims, purchaseOrders } = data;
-    const timeMap = new Map<string, { name: string; claims: number; pos: number }>();
-
-    // Helper to format date to "MMM YYYY"
-    const formatDate = (dateStr: string) => {
-      const d = new Date(dateStr);
-      return `${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
-    };
-
-    // 1. Process Purchase Orders (Restocking - Money Out)
-    purchaseOrders.forEach((po) => {
-      if (!po.created_at) return;
-      const key = formatDate(po.created_at);
-      
-      if (!timeMap.has(key)) {
-        timeMap.set(key, { name: key, claims: 0, pos: 0 });
-      }
-      
-      // Sum total amount of PO
-      const amount = Number(po.total_amount) || 0;
-      timeMap.get(key)!.pos += amount;
-    });
-
-    // 2. Process Claims (Usage - Value Consumed)
-    // Note: Since claims don't have a direct dollar value in the current API response (it's just items),
-    // we will ESTIMATE value for visualization or use item count if value is unavailable.
-    // For "The Flow of Value" story, we ideally want dollars.
-    // *Approximation*: We'll assume an average claim value or count for now to demonstrate the chart structure.
-    // In a real scenario, we'd sum (item_qty * unit_cost).
-    // Let's use a mock multiplier or just count for Sprint 2 prototype if cost isn't joined.
-    // *Correction*: We will use Claim Count * Average Value (e.g., $500) as a proxy if we can't get exact cost easily yet,
-    // OR we just visualize Volume (Claims Count vs PO Count) which is also valid.
-    // Let's visualize "Estimated Value" to fit the "Burn Rate" narrative ($).
-    claims.forEach((claim) => {
-        const key = formatDate(claim.created_at);
-        if (!timeMap.has(key)) {
-            timeMap.set(key, { name: key, claims: 0, pos: 0 });
-        }
-        // Mock estimation: Average claim value ~$500 (This should be replaced with real aggregation later)
-        timeMap.get(key)!.claims += 500; 
-    });
-
-    // Convert Map to Array and Sort by Date
-    return Array.from(timeMap.values()).sort((a, b) => {
-        return new Date(Date.parse(a.name)).getTime() - new Date(Date.parse(b.name)).getTime();
-    });
-
-  }, [data]);
-
-  if (isLoading) return <Skeleton className="h-[400px] w-full" />;
+  const claims = payload.find((p: any) => p.dataKey === 'claims');
+  const spend = payload.find((p: any) => p.dataKey === 'spend');
 
   return (
-    <Card>
+    <div className="rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 shadow-2xl backdrop-blur-sm">
+      <p className="text-sm font-semibold text-white mb-1">{label}</p>
+      <div className="space-y-1 text-xs text-white/80">
+        <p className="flex items-center justify-between gap-6">
+          <span>Materials Claimed:</span>
+          <span className="font-semibold">${claims?.value?.toLocaleString()}</span>
+        </p>
+        <p className="flex items-center justify-between gap-6">
+          <span>Restocking Spend:</span>
+          <span className="font-semibold text-emerald-300">${spend?.value?.toLocaleString()}</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export const ProjectBurnChart = () => {
+  return (
+    <Card className="bg-slate-950 border-white/5 text-white shadow-2xl">
       <CardHeader>
-        <CardTitle>Project "Burn" Rate</CardTitle>
-        <CardDescription>
-          Materials Claimed (Bar) vs. Restocking Spend (Line). 
-          <span className="text-muted-foreground ml-1 italic">
-            (Line above Bar = Overstocking risk)
-          </span>
+        <CardTitle className="text-white">Project "Burn" Rate</CardTitle>
+        <CardDescription className="text-white/70">
+          Materials Claimed (Bar) vs. Restocking Spend (Line)
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[350px] w-full">
+        <div className="h-[360px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid stroke="#f5f5f5" vertical={false} />
-              <XAxis 
-                dataKey="name" 
-                scale="point" 
-                padding={{ left: 30, right: 30 }} 
-                tick={{ fontSize: 12 }}
+            <ComposedChart data={mockData} margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#1e3a8a" stopOpacity={0.8} />
+                </linearGradient>
+                <filter id="glow" height="130%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#34d399" />
+                </filter>
+              </defs>
+              <CartesianGrid stroke="rgba(148,163,184,0.15)" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
               />
-              <YAxis 
-                yAxisId="left" 
-                orientation="left" 
-                tickFormatter={(val) => `$${val}`} 
-                label={{ value: 'Value ($)', angle: -90, position: 'insideLeft' }}
+              <YAxis
+                yAxisId="left"
+                tickFormatter={(val) => `$${val / 1000}k`}
+                tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip 
-                formatter={(value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}
-                labelStyle={{ color: 'black' }}
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tickFormatter={(val) => `$${val / 1000}k`}
+                tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
               />
-              <Legend />
-              <Bar 
-                yAxisId="left" 
-                dataKey="claims" 
-                name="Material Usage (Claims)" 
-                barSize={20} 
-                fill="#0ea5e9" 
-                radius={[4, 4, 0, 0]}
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#38bdf8', strokeOpacity: 0.2 }} />
+              <Bar
+                yAxisId="left"
+                dataKey="claims"
+                name="Materials Claimed"
+                barSize={32}
+                fill="url(#barGradient)"
+                radius={[8, 8, 0, 0]}
+                opacity={0.95}
               />
-              <Line 
-                yAxisId="left" 
-                type="monotone" 
-                dataKey="pos" 
-                name="Restocking (POs)" 
-                stroke="#f97316" 
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="spend"
+                name="Restocking Spend"
+                stroke="#34d399"
                 strokeWidth={3}
-                dot={{ r: 4 }}
+                dot={{ r: 5, fill: '#0f172a', strokeWidth: 2, stroke: '#34d399', filter: 'url(#glow)' }}
+                activeDot={{ r: 7 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-8 text-sm text-white/70">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-sm bg-gradient-to-b from-sky-300 to-blue-900" />
+            Materials Claimed
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-emerald-400" />
+            Restocking Spend
+          </div>
         </div>
       </CardContent>
     </Card>

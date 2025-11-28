@@ -1,38 +1,29 @@
-import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
-// Create connection pool for better performance
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  // SSL configuration for AWS RDS (optional, set DB_SSL=true to enable)
-  ...(process.env.DB_SSL === 'true' && {
-    ssl: {
-      rejectUnauthorized: false // For AWS RDS certificates
-    }
-  }),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-});
+// Create Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Missing Supabase environment variables (SUPABASE_URL, SUPABASE_KEY)');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Test connection
-pool.getConnection()
-  .then((connection) => {
-    console.log('✅ MySQL database connected successfully');
-    connection.release();
+supabase.from('vendors').select('count').limit(1)
+  .then(() => {
+    console.log('✅ Supabase database connected successfully');
   })
   .catch((error) => {
-    console.error('❌ MySQL database connection failed:', error.message);
-    process.exit(1);
+    console.error('❌ Supabase database connection failed:', error.message);
+    // Don't exit on connection test failure - let the app continue
+    // The actual queries will handle errors appropriately
   });
 
-export default pool;
+export default supabase;
 

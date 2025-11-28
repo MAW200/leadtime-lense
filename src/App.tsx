@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import PurchaseOrderDetail from "./pages/PurchaseOrderDetail";
 import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
 import Vendors from "./pages/Vendors";
 import VendorProfile from "./pages/VendorProfile";
 import Settings from "./pages/Settings";
@@ -64,6 +65,7 @@ const AppRoutes = () => {
         <Route path="purchase-orders" element={<PurchaseOrders />} />
         <Route path="purchase-orders/:id" element={<PurchaseOrderDetail />} />
         <Route path="products" element={<Products />} />
+        <Route path="products/:id" element={<ProductDetail />} />
         <Route path="vendors" element={<Vendors />} />
         <Route path="vendors/:id" element={<VendorProfile />} />
         <Route path="invoices" element={<Invoices />} />
