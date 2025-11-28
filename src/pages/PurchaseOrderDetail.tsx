@@ -668,7 +668,7 @@ const PurchaseOrderDetail = () => {
                                             control={form.control}
                                             name="quantity_ordered"
                                             render={({ field }) => (
-                                                <FormItem>
+                                                <FormItem className="flex flex-col">
                                                     <FormLabel>Quantity</FormLabel>
                                                     <FormControl>
                                                         <Input
@@ -688,7 +688,7 @@ const PurchaseOrderDetail = () => {
                                             control={form.control}
                                             name="unit_cost"
                                             render={({ field }) => (
-                                                <FormItem>
+                                                <FormItem className="flex flex-col">
                                                     <FormLabel>Unit Cost ($)</FormLabel>
                                                     <FormControl>
                                                         <Input

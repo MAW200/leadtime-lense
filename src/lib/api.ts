@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase';
+import { fetchAllExternalProducts } from './externalApi';
 import type {
   InventoryItem,
   MasterProduct,
@@ -52,13 +53,22 @@ const handleResponse = async <T>(query: any): Promise<T> => {
 export const api = {
   // Inventory
   inventory: {
-    getAll: () =>
-      handleResponse<InventoryItem[]>(
-        supabase
-          .from('inventory_items')
-          .select('*, master_product:master_products(*), product_vendors(is_primary, vendor:vendors(name))')
-          .order('created_at', { ascending: false })
-      ),
+    getAll: async () => {
+      // Use external API instead of Supabase
+      try {
+        const products = await fetchAllExternalProducts();
+        return products as InventoryItem[];
+      } catch (error) {
+        console.error('Failed to fetch from external API, falling back to Supabase:', error);
+        // Fallback to Supabase if external API fails
+        return handleResponse<InventoryItem[]>(
+          supabase
+            .from('inventory_items')
+            .select('*, master_product:master_products(*), product_vendors(is_primary, vendor:vendors(name))')
+            .order('created_at', { ascending: false })
+        );
+      }
+    },
     getMasters: () =>
       handleResponse<MasterProduct[]>(supabase.from('master_products').select('*').order('name')),
     getById: (id: string) =>

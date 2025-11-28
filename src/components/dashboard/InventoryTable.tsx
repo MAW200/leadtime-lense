@@ -31,7 +31,7 @@ export const InventoryTable = ({ data, filterStatus, onRowClick }: InventoryTabl
     } else if (stockDaysLeft < 30) {
       return { status: "reorder", label: "Re-order", color: "bg-warning text-warning-foreground" };
     } else {
-      return { status: "healthy", label: "Healthy", color: "bg-success text-success-foreground" };
+      return { status: "healthy", label: "Healthy", color: "bg-green-500 text-white" };
     }
   };
 

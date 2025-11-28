@@ -74,9 +74,14 @@ export const Sidebar = () => {
           <div className="relative backdrop-blur-2xl bg-sidebar/80 border border-sidebar-border/30 rounded-full shadow-2xl shadow-black/20 px-3 py-2">
             {/* Logo Section */}
             <div className="absolute -left-3 top-1/2 -translate-y-1/2">
-              <div className="bg-gradient-to-br from-primary via-blue-600 to-purple-600 p-3 rounded-full shadow-lg shadow-primary/30 border-2 border-background">
-                <Package className="h-5 w-5 text-white" />
-              </div>
+              <NavLink
+                to="/"
+                className="block cursor-pointer transition-transform duration-300 hover:scale-110 active:scale-95"
+              >
+                <div className="bg-gradient-to-br from-primary via-blue-600 to-purple-600 p-3 rounded-full shadow-lg shadow-primary/30 border-2 border-background">
+                  <Package className="h-5 w-5 text-white" />
+                </div>
+              </NavLink>
             </div>
 
             {/* Navigation Items */}
